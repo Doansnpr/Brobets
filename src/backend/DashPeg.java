@@ -477,18 +477,7 @@ public class DashPeg extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabel13MouseClicked
 
     private void btn_stokMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_stokMouseClicked
-        // TODO add your handling code here:
-          if (activePanel != null && activePanel != btn_stok) {
-            activePanel.setDynamicSize(180, activePanel.getHeight());
-        }
-
-        activePanel = (panel_custom) btn_stok;
-        activePanel.setDynamicSize(200, btn_stok.getHeight());
-
-        page.removeAll();
-        page.add(new StokMasuuk());
-        page.repaint();
-        page.revalidate();
+        
         
     }//GEN-LAST:event_btn_stokMouseClicked
 
