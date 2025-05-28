@@ -502,18 +502,17 @@ public class DashPeg extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_pemasokMouseExited
 
     private void btn_barangMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_barangMouseClicked
-         
-//        if (activePanel != null && activePanel != btn_barang) {
-//            activePanel.setDynamicSize(180, activePanel.getHeight());
-//        }
-//
-//        activePanel = (panel_custom) btn_barang;
-//        activePanel.setDynamicSize(200, btn_barang.getHeight());
-//
-//        page.removeAll();
-//        page.add(new MenuBarang());
-//        page.repaint();
-//        page.revalidate();
+            if (activePanel != null && activePanel != btn_barang) {
+            activePanel.setDynamicSize(180, activePanel.getHeight());
+        }
+
+        activePanel = (panel_custom) btn_barang;
+        activePanel.setDynamicSize(200, btn_barang.getHeight());
+
+        page.removeAll();
+        page.add(new MenuBarang());
+        page.repaint();
+        page.revalidate();
     }//GEN-LAST:event_btn_barangMouseClicked
 
     boolean panjang = false;
