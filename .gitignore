@@ -1,3 +1,11 @@
 /dist/
 "build/" 
 "*.class" 
+<<<<<<< HEAD
+<<<<<<< HEAD
+/nbproject/private/
+/build/
+=======
+>>>>>>> upstream/main
+=======
+>>>>>>> upstream/main
