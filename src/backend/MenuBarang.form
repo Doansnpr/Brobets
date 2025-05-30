@@ -284,7 +284,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JLabel" name="jLabel27">
+            <Component class="javax.swing.JLabel" name="label_username">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Username"/>
               </Properties>
@@ -543,7 +543,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JLabel" name="jLabel31">
+            <Component class="javax.swing.JLabel" name="label_username1">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Username"/>
               </Properties>

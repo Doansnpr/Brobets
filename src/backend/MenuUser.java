@@ -25,6 +25,12 @@ public class MenuUser extends javax.swing.JPanel {
      */
     public MenuUser() {
         initComponents();
+                label_username1.setText(Login.Session.getUsername());
+        label_username2.setText(Login.Session.getUsername());
+                label_username4.setText(Login.Session.getUsername());
+
+//        label_username3.setText(Login.Session.getUsername());
+
         txt_password.setText("Masukkan Password");
         txt_password.setEchoChar((char) 0); 
 //        label_username.setText(Login.Session.getUsername());
@@ -58,7 +64,7 @@ public class MenuUser extends javax.swing.JPanel {
         btn_ubah = new javax.swing.JButton();
         jLabel12 = new javax.swing.JLabel();
         jLabel26 = new javax.swing.JLabel();
-        label_username = new javax.swing.JLabel();
+        label_username1 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         tb_user = new custom.JTable_customAutoresize();
         page_tambah = new javax.swing.JPanel();
@@ -78,7 +84,7 @@ public class MenuUser extends javax.swing.JPanel {
         jLabel13 = new javax.swing.JLabel();
         btn_simpan = new javax.swing.JButton();
         jLabel30 = new javax.swing.JLabel();
-        jLabel31 = new javax.swing.JLabel();
+        label_username4 = new javax.swing.JLabel();
         page_ubah = new javax.swing.JPanel();
         jLabel32 = new javax.swing.JLabel();
         jLabel33 = new javax.swing.JLabel();
@@ -93,7 +99,7 @@ public class MenuUser extends javax.swing.JPanel {
         txt_nama1 = new javax.swing.JTextField();
         jLabel14 = new javax.swing.JLabel();
         jLabel34 = new javax.swing.JLabel();
-        jLabel35 = new javax.swing.JLabel();
+        label_username2 = new javax.swing.JLabel();
         btn_update = new javax.swing.JButton();
 
         setLayout(new java.awt.CardLayout());
@@ -180,8 +186,8 @@ public class MenuUser extends javax.swing.JPanel {
         jLabel26.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 28.png"))); // NOI18N
         page_user.add(jLabel26, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 10, -1, 69));
 
-        label_username.setText("Username");
-        page_user.add(label_username, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
+        label_username1.setText("Username");
+        page_user.add(label_username1, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
         tb_user.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -342,8 +348,8 @@ public class MenuUser extends javax.swing.JPanel {
         jLabel30.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 28.png"))); // NOI18N
         page_tambah.add(jLabel30, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 10, -1, 69));
 
-        jLabel31.setText("Username");
-        page_tambah.add(jLabel31, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
+        label_username4.setText("Username");
+        page_tambah.add(label_username4, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
         page_main.add(page_tambah, "card3");
 
@@ -456,8 +462,8 @@ public class MenuUser extends javax.swing.JPanel {
         jLabel34.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 28.png"))); // NOI18N
         page_ubah.add(jLabel34, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 10, -1, 69));
 
-        jLabel35.setText("Username");
-        page_ubah.add(jLabel35, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
+        label_username2.setText("Username");
+        page_ubah.add(label_username2, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
         btn_simpan.setContentAreaFilled(false);
 
@@ -1015,16 +1021,16 @@ public class MenuUser extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel28;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel30;
-    private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
-    private javax.swing.JLabel jLabel35;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JLabel label_username;
+    private javax.swing.JLabel label_username1;
+    private javax.swing.JLabel label_username2;
+    private javax.swing.JLabel label_username4;
     private javax.swing.JPanel page_main;
     private javax.swing.JPanel page_tambah;
     private javax.swing.JPanel page_ubah;

@@ -5,7 +5,22 @@ import custom.panel_custom;
 public class DashAdm extends javax.swing.JFrame {
 
     int xx,xy;
+     private String namaUser; // menyimpan nama user login
     
+
+   public DashAdm(String namaUser) {
+    initComponents();
+    this.namaUser = namaUser;
+    MenuDashAdm panel = new MenuDashAdm();
+    panel.setUsername(namaUser);
+
+    page2.removeAll(); // ganti ke page2
+    page2.add(panel);
+    page2.repaint();
+    page2.revalidate();
+
+    this.setLocationRelativeTo(null);
+}
     public DashAdm() {
         initComponents();
         
