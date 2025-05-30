@@ -21,9 +21,7 @@ public class PanelPemasok extends javax.swing.JFrame {
     private boolean isEditMode = false;
     private String idPemasok = null;
 
-    /**
-     * Creates new form PanelPemasok
-     */
+   
     public PanelPemasok() {
         initComponents();
         String nama_pemasok = null;
@@ -49,7 +47,7 @@ public class PanelPemasok extends javax.swing.JFrame {
         ((AbstractDocument) txt_notelp.getDocument()).setDocumentFilter(new filter());
     }
 
-    private String generateNewId(Connection conn, String prefix) throws SQLException {
+    private String GenerateNewId(Connection conn, String prefix) throws SQLException {
         String sql = "SELECT id_pemasok FROM pemasok ORDER BY id_pemasok DESC LIMIT 1";
         PreparedStatement pst = conn.prepareStatement(sql);
         java.sql.ResultSet rs = pst.executeQuery();
@@ -246,7 +244,7 @@ public class PanelPemasok extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this, "Data berhasil diperbarui!");
             } else {
 
-                String newId = generateNewId(conn, "PS");
+                String newId = GenerateNewId(conn, "PS");
                 String sql = "INSERT INTO pemasok (id_pemasok, nama_pemasok, no_telp, alamat) VALUES (?, ?, ?, ?)";
                 PreparedStatement pst = conn.prepareStatement(sql);
                 pst.setString(1, newId);

@@ -57,7 +57,7 @@ public class MenuPelanggan extends javax.swing.JPanel {
     private void HapusData() {
         int selectedRow = jTable_custom1.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Pilih baris yang ingin dinonaktifkan!");
+            JOptionPane.showMessageDialog(this, "Pilih pelanggan yang ingin dinonaktifkan!");
             return;
         }
 
@@ -87,10 +87,10 @@ public class MenuPelanggan extends javax.swing.JPanel {
         }
     }
 
-    private void aktifkanKembali() {
+    private void AktifkanKembali() {
         int selectedRow = jTable_custom1.getSelectedRow();
         if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Pilih baris yang ingin diaktifkan kembali!");
+            JOptionPane.showMessageDialog(this, "Pilih pelanggan yang ingin diaktifkan kembali!");
             return;
         }
 
@@ -106,7 +106,7 @@ public class MenuPelanggan extends javax.swing.JPanel {
             ps.setString(1, idPelanggan);
             ps.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "Pelanggan diaktifkan kembali!");
+            JOptionPane.showMessageDialog(this, "Pelanggan telah diaktifkan kembali!");
             loadDataTabel();
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Gagal mengaktifkan kembali: " + e.getMessage());
@@ -284,7 +284,7 @@ public class MenuPelanggan extends javax.swing.JPanel {
 
     private void btn_aktifActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_aktifActionPerformed
         // TODO add your handling code here:
-        aktifkanKembali();
+        AktifkanKembali();
     }//GEN-LAST:event_btn_aktifActionPerformed
 
 

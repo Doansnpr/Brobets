@@ -56,7 +56,7 @@ ImageIcon icon = new ImageIcon(getClass().getResource("/gambar/icon.png"));
 
         tbl_pemasok.setModel(model);
     } catch (SQLException e) {
-        JOptionPane.showMessageDialog(null, "Gagal load data: " + e.getMessage());
+        JOptionPane.showMessageDialog(null, "Gagal memuat data: " + e.getMessage());
     }
 }
 
@@ -261,7 +261,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
 
     int row = tbl_pemasok.getSelectedRow();
     if (row == -1) {
-        JOptionPane.showMessageDialog(null, "Pilih data yang ingin diedit!");
+        JOptionPane.showMessageDialog(null, "Pilih data pemasok yang ingin diedit!");
         return;
     }
 
@@ -286,7 +286,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         // TODO add your handling code here:
         int row = tbl_pemasok.getSelectedRow();
     if (row == -1) {
-        JOptionPane.showMessageDialog(null, "Pilih data yang ingin dihapus!");
+        JOptionPane.showMessageDialog(null, "Pilih data pemasok yang ingin dihapus!");
         return;
     }
 
