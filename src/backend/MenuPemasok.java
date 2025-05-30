@@ -25,21 +25,6 @@ ImageIcon icon = new ImageIcon(getClass().getResource("/gambar/icon.png"));
     
     public MenuPemasok() {
         initComponents();
-//        txt_search.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-//    @Override
-//    public void insertUpdate(javax.swing.event.DocumentEvent e) {
-//        cariPemasok();
-//    }
-//    @Override
-//    public void removeUpdate(javax.swing.event.DocumentEvent e) {
-//        cariPemasok();
-//    }
-//    @Override
-//    public void changedUpdate(javax.swing.event.DocumentEvent e) {
-//        cariPemasok();
-//    }
-//});
-
 
 
         loadDataPemasok();
@@ -54,7 +39,7 @@ ImageIcon icon = new ImageIcon(getClass().getResource("/gambar/icon.png"));
     model.addColumn("Alamat");
 
     try {
-        Koneksi.config(); // WAJIB panggil dulu!
+        Koneksi.config(); 
         Connection conn = Koneksi.getConnection();
         String sql = "SELECT * FROM pemasok";
         Statement st = conn.createStatement();
@@ -69,13 +54,13 @@ ImageIcon icon = new ImageIcon(getClass().getResource("/gambar/icon.png"));
             });
         }
 
-        tbl_pmasok.setModel(model);
+        tbl_pemasok.setModel(model);
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(null, "Gagal load data: " + e.getMessage());
     }
 }
 
-  private void cariPemasok() {
+  private void CariPemasok() {
     String keyword = txt_search.getText().trim();
 
     DefaultTableModel model = new DefaultTableModel();
@@ -105,7 +90,7 @@ ImageIcon icon = new ImageIcon(getClass().getResource("/gambar/icon.png"));
             });
         }
 
-        tbl_pmasok.setModel(model);
+        tbl_pemasok.setModel(model);
 
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
@@ -129,7 +114,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         }
     }
 
-    return String.format("%s%03d", prefix, nextId); // hasil: SM001, SM002, dst
+    return String.format("%s%03d", prefix, nextId); 
 }
     
     @SuppressWarnings("unchecked")
@@ -152,7 +137,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         label_username = new javax.swing.JLabel();
         jLabel27 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        tbl_pmasok = new custom.JTable_customAutoresize();
+        tbl_pemasok = new custom.JTable_customAutoresize();
 
         setLayout(new java.awt.CardLayout());
 
@@ -251,7 +236,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         page_pemasok.add(label_username, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
         page_pemasok.add(jLabel27, new org.netbeans.lib.awtextra.AbsoluteConstraints(104, 27, 250, 37));
 
-        tbl_pmasok.setModel(new javax.swing.table.DefaultTableModel(
+        tbl_pemasok.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -262,7 +247,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane1.setViewportView(tbl_pmasok);
+        jScrollPane1.setViewportView(tbl_pemasok);
 
         page_pemasok.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 250, 740, 420));
 
@@ -274,13 +259,13 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
     private void btn_ubahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_ubahActionPerformed
         // TODO add your handling code here:
 
-    int row = tbl_pmasok.getSelectedRow();
+    int row = tbl_pemasok.getSelectedRow();
     if (row == -1) {
         JOptionPane.showMessageDialog(null, "Pilih data yang ingin diedit!");
         return;
     }
 
-    DefaultTableModel model = (DefaultTableModel) tbl_pmasok.getModel();
+    DefaultTableModel model = (DefaultTableModel) tbl_pemasok.getModel();
     String id = (String) model.getValueAt(row, 0);
     String nama = (String) model.getValueAt(row, 1);
     String telp = (String) model.getValueAt(row, 2);
@@ -288,7 +273,6 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
 
     PanelPemasok frameEdit = new PanelPemasok(id, nama, telp, alamat);
 
-    // Gunakan lambda untuk lebih sederhana
     frameEdit.setRefreshListener(() -> loadDataPemasok());
 
     frameEdit.setLocationRelativeTo(null);
@@ -300,13 +284,13 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
 
     private void btn_hapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapusActionPerformed
         // TODO add your handling code here:
-        int row = tbl_pmasok.getSelectedRow();
+        int row = tbl_pemasok.getSelectedRow();
     if (row == -1) {
         JOptionPane.showMessageDialog(null, "Pilih data yang ingin dihapus!");
         return;
     }
 
-    String id = tbl_pmasok.getValueAt(row, 0).toString();
+    String id = tbl_pemasok.getValueAt(row, 0).toString();
     int konfirmasi = JOptionPane.showConfirmDialog(null, "Hapus data dengan ID " + id + "?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
 
     if (konfirmasi == JOptionPane.YES_OPTION) {
@@ -334,7 +318,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
     framePemasok.addWindowListener(new java.awt.event.WindowAdapter() {
         @Override
         public void windowClosed(java.awt.event.WindowEvent e) {
-            loadDataPemasok(); // Reload data setelah jendela ditutup
+            loadDataPemasok(); 
         }
     });
 
@@ -364,7 +348,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
 
     private void btn_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchActionPerformed
         // TODO add your handling code here:
-        cariPemasok();
+        CariPemasok();
     }//GEN-LAST:event_btn_searchActionPerformed
 
 
@@ -384,7 +368,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
     private javax.swing.JLabel label_username;
     private javax.swing.JPanel page_main;
     private javax.swing.JPanel page_pemasok;
-    private custom.JTable_customAutoresize tbl_pmasok;
+    private custom.JTable_customAutoresize tbl_pemasok;
     private javax.swing.JTextField txt_search;
     // End of variables declaration//GEN-END:variables
 }

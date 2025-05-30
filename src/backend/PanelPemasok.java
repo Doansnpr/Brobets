@@ -35,11 +35,9 @@ public class PanelPemasok extends javax.swing.JFrame {
         txt_alamat.setText(alamat);
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        
         ((AbstractDocument) txt_notelp.getDocument()).setDocumentFilter(new filter());
     }
 
-    
     public PanelPemasok(String id, String nama, String telp, String alamat) {
         initComponents();
         txt_nama.setText(nama);
@@ -47,7 +45,7 @@ public class PanelPemasok extends javax.swing.JFrame {
         txt_alamat.setText(alamat);
         this.idPemasok = id;
         isEditMode = true;
-        
+
         ((AbstractDocument) txt_notelp.getDocument()).setDocumentFilter(new filter());
     }
 
@@ -62,10 +60,10 @@ public class PanelPemasok extends javax.swing.JFrame {
             if (lastId.startsWith(prefix)) {
                 int lastNum = Integer.parseInt(lastId.substring(prefix.length()));
                 int newNum = lastNum + 1;
-                return prefix + String.format("%03d", newNum); // format 3 digit: PS001
+                return prefix + String.format("%03d", newNum);
             }
         }
-        // Jika belum ada data atau format tidak sesuai
+
         return prefix + "001";
     }
 
@@ -74,13 +72,12 @@ public class PanelPemasok extends javax.swing.JFrame {
     public void setRefreshListener(RefreshListener listener) {
         this.refreshListener = listener;
     }
-    
-    public interface RefreshListener {
-    void onDataUpdated();
-}
 
-    
-    
+    public interface RefreshListener {
+
+        void onDataUpdated();
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -228,49 +225,47 @@ public class PanelPemasok extends javax.swing.JFrame {
     }//GEN-LAST:event_txt_alamatActionPerformed
 
     private void btn_simpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_simpanActionPerformed
-                                       
-    String nama = txt_nama.getText();
-    String telp = txt_notelp.getText();
-    String alamat = txt_alamat.getText();
 
-    try {
-        backend.Koneksi.config(); // PENTING: panggil ini dulu
-        Connection conn = backend.Koneksi.getConnection(); // baru ambil koneksi
+        String nama = txt_nama.getText();
+        String telp = txt_notelp.getText();
+        String alamat = txt_alamat.getText();
 
-        if (isEditMode) {
-            // Mode edit: lakukan UPDATE
-            String sql = "UPDATE pemasok SET nama_pemasok=?, no_telp=?, alamat=? WHERE id_pemasok=?";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, nama);
-            pst.setString(2, telp);
-            pst.setString(3, alamat);
-            pst.setString(4, idPemasok);
-            pst.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Data berhasil diperbarui!");
-        } else {
-            // Mode tambah baru: lakukan INSERT
-            String newId = generateNewId(conn, "PS");
-            String sql = "INSERT INTO pemasok (id_pemasok, nama_pemasok, no_telp, alamat) VALUES (?, ?, ?, ?)";
-            PreparedStatement pst = conn.prepareStatement(sql);
-            pst.setString(1, newId);
-            pst.setString(2, nama);
-            pst.setString(3, telp);
-            pst.setString(4, alamat);
-            pst.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
+        try {
+            backend.Koneksi.config();
+            Connection conn = backend.Koneksi.getConnection();
+
+            if (isEditMode) {
+
+                String sql = "UPDATE pemasok SET nama_pemasok=?, no_telp=?, alamat=? WHERE id_pemasok=?";
+                PreparedStatement pst = conn.prepareStatement(sql);
+                pst.setString(1, nama);
+                pst.setString(2, telp);
+                pst.setString(3, alamat);
+                pst.setString(4, idPemasok);
+                pst.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Data berhasil diperbarui!");
+            } else {
+
+                String newId = generateNewId(conn, "PS");
+                String sql = "INSERT INTO pemasok (id_pemasok, nama_pemasok, no_telp, alamat) VALUES (?, ?, ?, ?)";
+                PreparedStatement pst = conn.prepareStatement(sql);
+                pst.setString(1, newId);
+                pst.setString(2, nama);
+                pst.setString(3, telp);
+                pst.setString(4, alamat);
+                pst.executeUpdate();
+                JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
+            }
+
+            if (refreshListener != null) {
+                refreshListener.onDataUpdated();
+            }
+
+            dispose();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal menyimpan data: " + e.getMessage());
         }
 
-        // Panggil listener untuk refresh data
-        if (refreshListener != null) {
-            refreshListener.onDataUpdated();
-        }
-        
-        dispose(); // Tutup form setelah simpan
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Gagal menyimpan data: " + e.getMessage());
-    }
-                                       
-    
 
     }//GEN-LAST:event_btn_simpanActionPerformed
 

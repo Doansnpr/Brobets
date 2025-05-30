@@ -1,164 +1,156 @@
-
 package backend;
-
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 
-
 public class MenuPelanggan extends javax.swing.JPanel {
 
- JTable table;
-    DefaultTableModel model;   
-    
+    JTable table;
+    DefaultTableModel model;
+
     public MenuPelanggan() {
         initComponents();
-         loadDataTabel();
-         label_username.setText(Login.Session.getUsername());
-               label_username.setText(Login.Session.getUsername());
+        loadDataTabel();
+        label_username.setText(Login.Session.getUsername());
+        label_username.setText(Login.Session.getUsername());
 
     }
 
     private void loadDataTabel() {
-    DefaultTableModel model = new DefaultTableModel();
-    model.addColumn("ID Pelanggan");
-    model.addColumn("Nama");
-    model.addColumn("No HP");
-    model.addColumn("Poin");
-    model.addColumn("Status");
-    model.addColumn("Status Reward");
+        DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("ID Pelanggan");
+        model.addColumn("Nama");
+        model.addColumn("No HP");
+        model.addColumn("Poin");
+        model.addColumn("Status");
+        model.addColumn("Status Reward");
 
-    jTable_custom1.setModel(model);
+        jTable_custom1.setModel(model);
 
-    Koneksi koneksi = new Koneksi();
-    koneksi.config();
+        Koneksi koneksi = new Koneksi();
+        koneksi.config();
 
-    try {
-        Connection conn = koneksi.getConnection();
-        Statement st = conn.createStatement();
-        ResultSet rs = st.executeQuery("SELECT * FROM pelanggan");
+        try {
+            Connection conn = koneksi.getConnection();
+            Statement st = conn.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * FROM pelanggan");
 
-        while (rs.next()) {
-            model.addRow(new Object[]{
-                rs.getString("id_pelanggan"),
-                rs.getString("nama_pelanggan"),
-                rs.getString("no_hp"),
-                rs.getInt("poin"),
-                rs.getString("status"),
-                rs.getString("status_reward")
-            });
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("id_pelanggan"),
+                    rs.getString("nama_pelanggan"),
+                    rs.getString("no_hp"),
+                    rs.getInt("poin"),
+                    rs.getString("status"),
+                    rs.getString("status_reward")
+                });
+            }
+
+            rs.close();
+            st.close();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mengambil data: " + e.getMessage());
+        }
+    }
+
+    private void HapusData() {
+        int selectedRow = jTable_custom1.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih baris yang ingin dinonaktifkan!");
+            return;
         }
 
-        rs.close();
-        st.close();
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Gagal mengambil data: " + e.getMessage());
+        String idPelanggan = jTable_custom1.getValueAt(selectedRow, 0).toString();
+
+        int konfirmasi = JOptionPane.showConfirmDialog(this,
+                "Yakin ingin menonaktifkan pelanggan dengan ID: " + idPelanggan + "?",
+                "Konfirmasi",
+                JOptionPane.YES_NO_OPTION);
+
+        if (konfirmasi == JOptionPane.YES_OPTION) {
+            try {
+                Koneksi koneksi = new Koneksi();
+                koneksi.config();
+                Connection conn = koneksi.getConnection();
+
+                String sql = "UPDATE pelanggan SET status='nonaktif' WHERE id_pelanggan=?";
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ps.setString(1, idPelanggan);
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(this, "Pelanggan dinonaktifkan!");
+                loadDataTabel();
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Gagal: " + e.getMessage());
+            }
+        }
     }
-}
 
+    private void aktifkanKembali() {
+        int selectedRow = jTable_custom1.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih baris yang ingin diaktifkan kembali!");
+            return;
+        }
 
+        String idPelanggan = jTable_custom1.getValueAt(selectedRow, 0).toString();
 
-    private void hapusData() {
-    int selectedRow = jTable_custom1.getSelectedRow();
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this, "Pilih baris yang ingin dinonaktifkan!");
-        return;
-    }
-
-    String idPelanggan = jTable_custom1.getValueAt(selectedRow, 0).toString();
-
-    int konfirmasi = JOptionPane.showConfirmDialog(this,
-            "Yakin ingin menonaktifkan pelanggan dengan ID: " + idPelanggan + "?",
-            "Konfirmasi",
-            JOptionPane.YES_NO_OPTION);
-
-    if (konfirmasi == JOptionPane.YES_OPTION) {
         try {
             Koneksi koneksi = new Koneksi();
             koneksi.config();
             Connection conn = koneksi.getConnection();
 
-            String sql = "UPDATE pelanggan SET status='nonaktif' WHERE id_pelanggan=?";
+            String sql = "UPDATE pelanggan SET status='aktif' WHERE id_pelanggan=?";
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, idPelanggan);
             ps.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "Pelanggan dinonaktifkan!");
+            JOptionPane.showMessageDialog(this, "Pelanggan diaktifkan kembali!");
             loadDataTabel();
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Gagal: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Gagal mengaktifkan kembali: " + e.getMessage());
         }
     }
-}
 
-    private void aktifkanKembali() {
-    int selectedRow = jTable_custom1.getSelectedRow();
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this, "Pilih baris yang ingin diaktifkan kembali!");
-        return;
-    }
+    private void CariData() {
+        DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("ID Pelanggan");
+        model.addColumn("Nama");
+        model.addColumn("No HP");
+        model.addColumn("Poin");
 
-    String idPelanggan = jTable_custom1.getValueAt(selectedRow, 0).toString();
+        String keyword = txt_search.getText();
 
-    try {
-        Koneksi koneksi = new Koneksi();
-        koneksi.config();
-        Connection conn = koneksi.getConnection();
+        try {
+            Koneksi koneksi = new Koneksi();
+            koneksi.config();
+            Connection conn = koneksi.getConnection();
 
-        String sql = "UPDATE pelanggan SET status='aktif' WHERE id_pelanggan=?";
-        PreparedStatement ps = conn.prepareStatement(sql);
-        ps.setString(1, idPelanggan);
-        ps.executeUpdate();
+            String query = "SELECT * FROM pelanggan WHERE id_pelanggan LIKE ? OR nama_pelanggan LIKE ? OR no_hp LIKE ?";
+            PreparedStatement ps = conn.prepareStatement(query);
+            ps.setString(1, "%" + keyword + "%");
+            ps.setString(2, "%" + keyword + "%");
+            ps.setString(3, "%" + keyword + "%");
 
-        JOptionPane.showMessageDialog(this, "Pelanggan diaktifkan kembali!");
-        loadDataTabel();
-    } catch (SQLException e) {
-        JOptionPane.showMessageDialog(this, "Gagal mengaktifkan kembali: " + e.getMessage());
-    }
-}
+            ResultSet rs = ps.executeQuery();
 
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("id_pelanggan"),
+                    rs.getString("nama_pelanggan"),
+                    rs.getString("no_hp"),
+                    rs.getInt("poin")
+                });
+            }
 
+            jTable_custom1.setModel(model);
 
-    private void cariData() {
-    DefaultTableModel model = new DefaultTableModel();
-    model.addColumn("ID Pelanggan");
-    model.addColumn("Nama");
-    model.addColumn("No HP");
-    model.addColumn("Poin");
-
-    String keyword = txt_search.getText(); // ambil teks dari field pencarian
-
-    try {
-        Koneksi koneksi = new Koneksi();
-        koneksi.config();
-        Connection conn = koneksi.getConnection();
-
-        String query = "SELECT * FROM pelanggan WHERE id_pelanggan LIKE ? OR nama_pelanggan LIKE ? OR no_hp LIKE ?";
-        PreparedStatement ps = conn.prepareStatement(query);
-        ps.setString(1, "%" + keyword + "%");
-        ps.setString(2, "%" + keyword + "%");
-        ps.setString(3, "%" + keyword + "%");
-
-        ResultSet rs = ps.executeQuery();
-
-        while (rs.next()) {
-            model.addRow(new Object[]{
-                rs.getString("id_pelanggan"),
-                rs.getString("nama_pelanggan"),
-                rs.getString("no_hp"),
-                rs.getInt("poin")
-            });
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
         }
-
-        jTable_custom1.setModel(model);
-
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
     }
-}
 
-    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -278,12 +270,12 @@ public class MenuPelanggan extends javax.swing.JPanel {
 
     private void btn_nonaktifActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_nonaktifActionPerformed
         // TODO add your handling code here:
-        hapusData();
+        HapusData();
     }//GEN-LAST:event_btn_nonaktifActionPerformed
 
     private void btn_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchActionPerformed
         // TODO add your handling code here:
-        cariData();
+        CariData();
     }//GEN-LAST:event_btn_searchActionPerformed
 
     private void txt_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txt_searchActionPerformed
@@ -292,13 +284,10 @@ public class MenuPelanggan extends javax.swing.JPanel {
 
     private void btn_aktifActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_aktifActionPerformed
         // TODO add your handling code here:
-         aktifkanKembali();
+        aktifkanKembali();
     }//GEN-LAST:event_btn_aktifActionPerformed
 
 
-
-
-    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_aktif;
     private javax.swing.JButton btn_nonaktif;
