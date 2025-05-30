@@ -53,6 +53,9 @@ public class MenuBarang extends javax.swing.JPanel {
         Koneksi DB = new Koneksi();
         DB.config();
         con = DB.con;
+         label_username.setText(Login.Session.getUsername());
+         label_username1.setText(Login.Session.getUsername());
+
 
         txt_search.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
@@ -250,7 +253,43 @@ public class MenuBarang extends javax.swing.JPanel {
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(this, "Kesalahan database: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+        
+        
+        try {
+            String query = "SELECT DISTINCT kategori FROM barang";
+            pst = con.prepareStatement(query);
+            rs = pst.executeQuery();
+
+            Set<String> kategoriset = new HashSet<>();
+
+            cmb_kategori.removeAllItems();
+
+            while (rs.next()) {
+                String kategori = rs.getString("kategori");
+                if (kategori != null) {
+                    kategori = kategori.trim();
+                    if (!kategori.isEmpty() && kategoriset.add(kategori)) {
+                        cmb_kategori.addItem(kategori);
+                    }
+                }
+            }
+
+            String[] manualStatuses = {"Tenda", "Kursi & meja", "Carrier", "Peralatan masak", "Peralatan tidur", "Peralatan pendukung", "Aksesori outdoor"};
+            for (String manualKategori : manualStatuses) {
+                if (kategoriset.add(manualKategori)) {
+                    cmb_kategori.addItem(manualKategori);
+                }
+            }
+
+            rs.close();
+            pst.close();
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Kesalahan database: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
+    
+    
     
     private String generateID(String tableName, String idColumn, String prefix) {
         String newID = prefix + "001";
@@ -683,7 +722,7 @@ public class MenuBarang extends javax.swing.JPanel {
         jLabel8 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         jLabel26 = new javax.swing.JLabel();
-        jLabel27 = new javax.swing.JLabel();
+        label_username = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tbl_barang = new custom.JTable_customAutoresize();
         page_tambah = new javax.swing.JPanel();
@@ -699,7 +738,7 @@ public class MenuBarang extends javax.swing.JPanel {
         jLabel13 = new javax.swing.JLabel();
         btn_simpan = new javax.swing.JButton();
         jLabel30 = new javax.swing.JLabel();
-        jLabel31 = new javax.swing.JLabel();
+        label_username1 = new javax.swing.JLabel();
         page_ubah = new javax.swing.JPanel();
         jLabel32 = new javax.swing.JLabel();
         jLabel33 = new javax.swing.JLabel();
@@ -841,8 +880,8 @@ public class MenuBarang extends javax.swing.JPanel {
         jLabel26.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 28.png"))); // NOI18N
         page_barang.add(jLabel26, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 10, -1, 69));
 
-        jLabel27.setText("Username");
-        page_barang.add(jLabel27, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
+        label_username.setText("Username");
+        page_barang.add(label_username, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
         tbl_barang.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -927,8 +966,8 @@ public class MenuBarang extends javax.swing.JPanel {
         jLabel30.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 28.png"))); // NOI18N
         page_tambah.add(jLabel30, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 10, -1, 69));
 
-        jLabel31.setText("Username");
-        page_tambah.add(jLabel31, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
+        label_username1.setText("Username");
+        page_tambah.add(label_username1, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
         page_main.add(page_tambah, "card3");
 
@@ -1540,11 +1579,9 @@ public class MenuBarang extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
-    private javax.swing.JLabel jLabel27;
     private javax.swing.JLabel jLabel28;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel30;
-    private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
@@ -1558,6 +1595,8 @@ public class MenuBarang extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JLabel label_username;
+    private javax.swing.JLabel label_username1;
     private javax.swing.JPanel page_barang;
     private javax.swing.JPanel page_main;
     private javax.swing.JPanel page_rusak;

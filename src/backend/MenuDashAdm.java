@@ -22,11 +22,24 @@ public class MenuDashAdm extends javax.swing.JPanel {
     /**
      * Creates new form MenuDashAdm
      */
+        public MenuDashAdm(String namaUser) {
+        initComponents();
+        label_username.setText(namaUser);
+                configureDashboard();
+                        label_username.setText("Halo, " + namaUser);
+
+
+    }
+      public void setUsername(String namaUser) {
+        label_username.setText(namaUser); // label_username harus sudah dibuat lewat GUI editor
+    }
+    
     public MenuDashAdm() {
         initComponents();
-        configureDashboard();
-//        label_username.setText(Login.Session.getUsername());    
+        label_username.setText(Login.Session.getUsername());
     }
+
+    
         private void configureDashboard() {
         try {
             loadDataUser();

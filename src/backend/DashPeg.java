@@ -7,19 +7,35 @@ import custom.panel_custom;
 public class DashPeg extends javax.swing.JFrame {
 
     int xx,xy;
-   
-    public DashPeg() {
+          private String namaUser; // Tambahkan ini
+
+     public DashPeg(String namaUser) {
         initComponents();
+        this.namaUser = namaUser; // Simpan ke variabel instance
+        MenuDashPeg panel = new MenuDashPeg();
+        panel.setUsername(namaUser);
         
-       activePanel = (panel_custom) btn_dash; 
-       activePanel.setDynamicSize(200, btn_dash.getHeight()); 
+
+        page.removeAll();
+        page.add(panel);
+        page.repaint();
+        page.revalidate();
+
+        this.setLocationRelativeTo(null);
+    }
+
+   
+      public DashPeg() {
+        initComponents();
+
+        activePanel = (panel_custom) btn_dash;
+        activePanel.setDynamicSize(200, btn_dash.getHeight());
 
         page.removeAll();
         page.add(new MenuDashPeg());
         page.repaint();
         page.revalidate();
     }
-
   
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -477,7 +493,17 @@ public class DashPeg extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabel13MouseClicked
 
     private void btn_stokMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_stokMouseClicked
-        
+         if (activePanel != null && activePanel != btn_stok) {
+            activePanel.setDynamicSize(180, activePanel.getHeight());
+        }
+
+        activePanel = (panel_custom) btn_stok;
+        activePanel.setDynamicSize(200, btn_stok.getHeight());
+
+        page.removeAll();
+        page.add(new StokMasuuk());
+        page.repaint();
+        page.revalidate();
         
     }//GEN-LAST:event_btn_stokMouseClicked
 
@@ -486,7 +512,17 @@ public class DashPeg extends javax.swing.JFrame {
     }//GEN-LAST:event_jLabel17MouseClicked
 
     private void btn_pemasokMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_pemasokMouseClicked
-        
+       if (activePanel != null && activePanel != btn_pemasok) {
+            activePanel.setDynamicSize(180, activePanel.getHeight());
+        }
+
+        activePanel = (panel_custom) btn_pemasok;
+        activePanel.setDynamicSize(200, btn_pemasok.getHeight());
+
+        page.removeAll();
+        page.add(new MenuPemasok());
+        page.repaint();
+        page.revalidate();       
     }//GEN-LAST:event_btn_pemasokMouseClicked
 
     private void btn_pemasokMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_pemasokMouseEntered
