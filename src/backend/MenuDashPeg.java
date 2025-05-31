@@ -6,11 +6,23 @@ import backend.Login.Session;
 
 public class MenuDashPeg extends javax.swing.JPanel {
 
+      public MenuDashPeg(String namaUser) {
+        initComponents();
+        label_username.setText("Halo, " + namaUser);
+
+
+        label_username.setText(namaUser);
+        
+    }
+      public void setUsername(String namaUser) {
+        label_username.setText(namaUser); // label_username harus sudah dibuat lewat GUI editor
+    }
     
     public MenuDashPeg() {
         initComponents();
         label_username.setText(Session.getUsername());
     }
+    
 
     
     @SuppressWarnings("unchecked")

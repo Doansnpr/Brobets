@@ -231,7 +231,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JLabel" name="label_username">
+            <Component class="javax.swing.JLabel" name="label_username1">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Username"/>
               </Properties>
@@ -581,7 +581,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JLabel" name="jLabel31">
+            <Component class="javax.swing.JLabel" name="label_username4">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Username"/>
               </Properties>
@@ -825,7 +825,7 @@
                 </Constraint>
               </Constraints>
             </Component>
-            <Component class="javax.swing.JLabel" name="jLabel35">
+            <Component class="javax.swing.JLabel" name="label_username2">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Username"/>
               </Properties>

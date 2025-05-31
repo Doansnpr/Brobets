@@ -16,6 +16,8 @@ public class MenuPelanggan extends javax.swing.JPanel {
         initComponents();
          loadDataTabel();
          label_username.setText(Login.Session.getUsername());
+               label_username.setText(Login.Session.getUsername());
+
     }
 
     private void loadDataTabel() {
