@@ -94,7 +94,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
     model.addColumn("Total Denda");
 
     
-    listIdKembali.clear(); // clear list dulu setiap refresh
+    listIdKembali.clear();
 
     try {
         String sql = "SELECT p.id_kembali, p.id_sewa, p.tgl_kembali, p.status, p.denda_keterlambatan, p.total_denda " +
@@ -495,8 +495,6 @@ public class MenuPengembalian extends javax.swing.JPanel {
         }
     }
 
-
-   
     private void CekDanHitungKembalian() {
         try {
             String bayarText = txt_bayar.getText().replace("Rp ", "").replace(",", "").replaceAll("[^\\d]", "");
@@ -548,11 +546,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(null, "Tolong masukkan angka yang valid.");
         }
     }
-
-
-
-    
-    
+ 
     public void hitungDendaBarangKembali(int dendaKeterlambatan) {
         int totalDendaKerusakan = 0;
         DefaultTableModel model = (DefaultTableModel) table_barang_kembali.getModel();
@@ -595,29 +589,27 @@ public class MenuPengembalian extends javax.swing.JPanel {
         }
     }
 
+    public String generateID(String prefix, String table, String kolom) {
+        String id = prefix + "001";
+        try {
+            String sql = "SELECT " + kolom + " FROM " + table + " ORDER BY " + kolom + " DESC LIMIT 1";
+            pst = con.prepareStatement(sql);
+            rs = pst.executeQuery();
 
+            if (rs.next()) {
+                String lastID = rs.getString(1);
+                int number = Integer.parseInt(lastID.replace(prefix, ""));
+                number++;
+                id = String.format("%s%03d", prefix, number);
+            }
 
-public String generateID(String prefix, String table, String kolom) {
-    String id = prefix + "001";
-    try {
-        String sql = "SELECT " + kolom + " FROM " + table + " ORDER BY " + kolom + " DESC LIMIT 1";
-        pst = con.prepareStatement(sql);
-        rs = pst.executeQuery();
-
-        if (rs.next()) {
-            String lastID = rs.getString(1);
-            int number = Integer.parseInt(lastID.replace(prefix, ""));
-            number++;
-            id = String.format("%s%03d", prefix, number);
+            rs.close();
+            pst.close();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Gagal generate ID: " + e.getMessage());
         }
-
-        rs.close();
-        pst.close();
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(null, "Gagal generate ID: " + e.getMessage());
+        return id;
     }
-    return id;
-}
 
 
     
