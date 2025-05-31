@@ -13,7 +13,7 @@ public class Koneksi {
     public static void config(){
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost/brobetssss", "root", "");
+            con = DriverManager.getConnection("jdbc:mysql://localhost/brobets", "root", "");
         } catch (ClassNotFoundException e) {
             JOptionPane.showMessageDialog(null, "Driver tidak ditemukan: " + e.getMessage());
         } catch (SQLException e) {

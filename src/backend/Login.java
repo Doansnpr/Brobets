@@ -205,13 +205,14 @@ public class Login extends javax.swing.JFrame {
         });
         form_login.add(txt_password, new org.netbeans.lib.awtextra.AbsoluteConstraints(390, 413, 150, 18));
 
+        btn_password.setBackground(new java.awt.Color(245, 245, 245));
         btn_password.setBorder(null);
         btn_password.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btn_passwordActionPerformed(evt);
             }
         });
-        form_login.add(btn_password, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 410, 50, 20));
+        form_login.add(btn_password, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 412, 50, 20));
 
         link_register.setContentAreaFilled(false);
 
@@ -365,16 +366,16 @@ public class Login extends javax.swing.JFrame {
 
     private void btn_passwordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_passwordActionPerformed
         if (isPasswordVisible) {
-            txt_password.setEchoChar('•'); // sembunyikan password
+            txt_password.setEchoChar('*');
             btn_password.setIcon(eyeClosedIcon);
             isPasswordVisible = false;
         } else {
-            txt_password.setEchoChar((char) 0); // tampilkan password
+            txt_password.setEchoChar((char) 0);
             btn_password.setIcon(eyeOpenIcon);
             isPasswordVisible = true;
         }
 
-        btn_password.repaint(); // <--- ini penting agar icon langsung muncul
+        btn_password.repaint();
 
 
     }//GEN-LAST:event_btn_passwordActionPerformed

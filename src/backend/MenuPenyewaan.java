@@ -17,6 +17,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Toolkit;
 import java.awt.print.Paper;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -45,14 +46,64 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         con = DB.con;
 
         load_table();
+        search1();
         label_username.setText(Login.Session.getUsername());
         label_username2.setText(Login.Session.getUsername());
         label_username3.setText(Login.Session.getUsername());
-        label_username.setText(Login.Session.getUsername());
-        label_username2.setText( Login.Session.getUsername());
-        label_username3.setText(Login.Session.getUsername());
+        label_username4.setText(Login.Session.getUsername());
+     
 
     }
+    
+    private void search1(){
+        txt_search.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+        @Override
+        public void insertUpdate(javax.swing.event.DocumentEvent e) {
+            cariPenyewaan();
+        }
+        @Override
+        public void removeUpdate(javax.swing.event.DocumentEvent e) {
+            cariPenyewaan();
+        }
+        @Override
+        public void changedUpdate(javax.swing.event.DocumentEvent e) {
+            cariPenyewaan();
+        }
+    });
+    }
+    
+    private void cariPenyewaan() {
+    String keyword = txt_search.getText().trim();
+
+    DefaultTableModel model = (DefaultTableModel) table_sewa.getModel();
+    model.setRowCount(0); // Hanya hapus baris, jangan tambah kolom lagi!
+
+    try {
+        String sql = "SELECT penyewaan.*, pengguna.nama_pengguna, pelanggan.nama_pelanggan FROM penyewaan JOIN pelanggan " 
+                + "ON penyewaan.id_pelanggan = pelanggan.id_pelanggan JOIN pengguna ON penyewaan.id_pengguna = pengguna.id_pengguna WHERE pelanggan.nama_pelanggan LIKE ?";
+        pst = con.prepareStatement(sql);
+        pst.setString(1, "%" + keyword + "%");
+        rs = pst.executeQuery();
+
+        while (rs.next()) {
+            model.addRow(new Object[]{
+                rs.getString("id_sewa"),
+                rs.getString("nama_pelanggan"),
+                rs.getString("nama_pengguna"),
+                rs.getString("tgl_sewa"),
+                rs.getString("tgl_rencana_kembali"),
+                rs.getString("total_harga"),
+                rs.getString("bayar"),
+                rs.getString("kembalian"),
+                rs.getString("jaminan"),
+                rs.getString("status")
+            });
+        }
+
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
+    }
+}
 
     private String generateID(String tableName, String idColumn, String prefix) {
         String newID = prefix + "001";
@@ -523,7 +574,7 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         jLabel12 = new javax.swing.JLabel();
         jLabel26 = new javax.swing.JLabel();
         label_username = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
+        jScrollPane3 = new javax.swing.JScrollPane();
         table_sewa = new custom.JTable_custom();
         page_tambah = new javax.swing.JPanel();
         jLabel28 = new javax.swing.JLabel();
@@ -541,12 +592,12 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         cek_sim = new javax.swing.JRadioButton();
         cek_fckk = new javax.swing.JRadioButton();
         jLabel13 = new javax.swing.JLabel();
-        jLabel14 = new javax.swing.JLabel();
         btn_back = new javax.swing.JButton();
         jLabel30 = new javax.swing.JLabel();
         label_username2 = new javax.swing.JLabel();
         btn_next = new javax.swing.JButton();
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        jButton1 = new javax.swing.JButton();
         page_barang = new javax.swing.JPanel();
         jLabel32 = new javax.swing.JLabel();
         jLabel33 = new javax.swing.JLabel();
@@ -568,6 +619,14 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         btn_simpan = new javax.swing.JButton();
         jLabel34 = new javax.swing.JLabel();
         label_username3 = new javax.swing.JLabel();
+        page_peraturan = new javax.swing.JPanel();
+        jLabel31 = new javax.swing.JLabel();
+        jLabel35 = new javax.swing.JLabel();
+        btn_back2 = new javax.swing.JButton();
+        jLabel36 = new javax.swing.JLabel();
+        label_username4 = new javax.swing.JLabel();
+        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 0), new java.awt.Dimension(32767, 0));
+        jLabel2 = new javax.swing.JLabel();
 
         dateChooser.setForeground(new java.awt.Color(195, 45, 45));
         dateChooser.setDateFormat("yyyy-MM-dd");
@@ -691,9 +750,9 @@ public class MenuPenyewaan extends javax.swing.JPanel {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane1.setViewportView(table_sewa);
+        jScrollPane3.setViewportView(table_sewa);
 
-        page_penyewaan.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 240, 760, 380));
+        page_penyewaan.add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 240, 750, 400));
 
         page_main.add(page_penyewaan, "card2");
 
@@ -759,9 +818,15 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         no_hp.setBorder(null);
         form_tambah.add(no_hp, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 368, 440, 30));
 
+        tgl_kembali.setText(""); // untuk JTextField
         tgl_kembali.setBackground(new java.awt.Color(255, 244, 232));
         tgl_kembali.setToolTipText("");
         tgl_kembali.setBorder(null);
+        tgl_kembali.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tgl_kembaliActionPerformed(evt);
+            }
+        });
         form_tambah.add(tgl_kembali, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 306, 390, 30));
 
         tgl_pinjam.setBackground(new java.awt.Color(255, 244, 232));
@@ -774,23 +839,26 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         nama_penyewa.setBorder(null);
         form_tambah.add(nama_penyewa, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 183, 390, 30));
 
+        cek_ktm.setText("KTM");
         cek_ktm.setBorder(null);
         form_tambah.add(cek_ktm, new org.netbeans.lib.awtextra.AbsoluteConstraints(174, 430, 20, 20));
 
+        cek_ktp.setText("KTP");
         cek_ktp.setBorder(null);
         form_tambah.add(cek_ktp, new org.netbeans.lib.awtextra.AbsoluteConstraints(115, 430, 20, 20));
 
+        cek_sim.setText("SIM");
         cek_sim.setBorder(null);
         form_tambah.add(cek_sim, new org.netbeans.lib.awtextra.AbsoluteConstraints(58, 430, 20, 20));
-        form_tambah.add(cek_fckk, new org.netbeans.lib.awtextra.AbsoluteConstraints(234, 430, -1, -1));
+
+        cek_fckk.setText("FC KK");
+        cek_fckk.setBorder(null);
+        form_tambah.add(cek_fckk, new org.netbeans.lib.awtextra.AbsoluteConstraints(235, 431, 20, 20));
 
         jLabel13.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Form Tambah Penyewa (1).png"))); // NOI18N
         form_tambah.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 0, 560, 490));
 
         page_tambah.add(form_tambah, new org.netbeans.lib.awtextra.AbsoluteConstraints(130, 90, 580, 490));
-
-        jLabel14.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/_Syarat dan Ketentuan berlaku..png"))); // NOI18N
-        page_tambah.add(jLabel14, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 580, 230, 20));
 
         btn_back.setContentAreaFilled(false);
 
@@ -827,6 +895,17 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         page_tambah.add(btn_next, new org.netbeans.lib.awtextra.AbsoluteConstraints(600, 580, 100, 40));
         page_tambah.add(filler1, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 80, -1, -1));
 
+        jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/_Syarat dan Ketentuan berlaku..png"))); // NOI18N
+        jButton1.setBorder(null);
+        jButton1.setContentAreaFilled(false);
+        jButton1.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/_Syarat dan Ketentuan berlaku. Select.png"))); // NOI18N
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        page_tambah.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 580, 230, 20));
+
         page_main.add(page_tambah, "card3");
 
         page_barang.setBackground(new java.awt.Color(255, 244, 232));
@@ -856,6 +935,7 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         form_table_tambah.setBackground(new java.awt.Color(255, 244, 232));
         form_table_tambah.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        txt_barcode.setEditable(false);
         txt_barcode.setBackground(new java.awt.Color(238, 236, 227));
         txt_barcode.setBorder(null);
         form_table_tambah.add(txt_barcode, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 100, 120, 20));
@@ -904,6 +984,11 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         btn_hapus_barang.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Button Hapus.png"))); // NOI18N
         btn_hapus_barang.setBorder(null);
         btn_hapus_barang.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Button Hapus Select.png"))); // NOI18N
+        btn_hapus_barang.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_hapus_barangActionPerformed(evt);
+            }
+        });
         form_table_tambah.add(btn_hapus_barang, new org.netbeans.lib.awtextra.AbsoluteConstraints(529, 32, 80, 40));
 
         btn_search.setContentAreaFilled(false);
@@ -920,6 +1005,7 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         });
         form_table_tambah.add(btn_searchBrg, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 33, 40, 40));
 
+        txt_kembalian.setEditable(false);
         txt_kembalian.setBackground(new java.awt.Color(238, 236, 227));
         txt_kembalian.setBorder(null);
         form_table_tambah.add(txt_kembalian, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 482, 110, 18));
@@ -930,6 +1016,9 @@ public class MenuPenyewaan extends javax.swing.JPanel {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 txt_bayarKeyReleased(evt);
             }
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txt_bayarKeyTyped(evt);
+            }
         });
         form_table_tambah.add(txt_bayar, new org.netbeans.lib.awtextra.AbsoluteConstraints(120, 453, 110, 18));
 
@@ -939,6 +1028,11 @@ public class MenuPenyewaan extends javax.swing.JPanel {
 
         txt_qty.setBackground(new java.awt.Color(238, 236, 227));
         txt_qty.setBorder(null);
+        txt_qty.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txt_qtyKeyTyped(evt);
+            }
+        });
         form_table_tambah.add(txt_qty, new org.netbeans.lib.awtextra.AbsoluteConstraints(381, 46, 40, 20));
 
         txt_total.setEditable(false);
@@ -973,6 +1067,42 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         page_barang.add(label_username3, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
         page_main.add(page_barang, "card3");
+
+        page_peraturan.setBackground(new java.awt.Color(255, 244, 232));
+        page_peraturan.setPreferredSize(new java.awt.Dimension(836, 666));
+        page_peraturan.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jLabel31.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Syarat & Ketentuan.png"))); // NOI18N
+        page_peraturan.add(jLabel31, new org.netbeans.lib.awtextra.AbsoluteConstraints(104, 27, 390, 37));
+
+        jLabel35.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 74.png"))); // NOI18N
+        page_peraturan.add(jLabel35, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 27, 41, 37));
+
+        btn_back.setContentAreaFilled(false);
+
+        btn_back.setBorderPainted(false);
+        btn_back2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Button Kembali.png"))); // NOI18N
+        btn_back2.setBorder(null);
+        btn_back2.setContentAreaFilled(false);
+        btn_back2.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Button Kembali Select.png"))); // NOI18N
+        btn_back2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_back2ActionPerformed(evt);
+            }
+        });
+        page_peraturan.add(btn_back2, new org.netbeans.lib.awtextra.AbsoluteConstraints(600, 600, 100, 40));
+
+        jLabel36.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 28.png"))); // NOI18N
+        page_peraturan.add(jLabel36, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 10, -1, 69));
+
+        label_username4.setText("Username");
+        page_peraturan.add(label_username4, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
+        page_peraturan.add(filler2, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 80, -1, -1));
+
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Page Syarat dan ketentuan.png"))); // NOI18N
+        page_peraturan.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(140, 80, 570, 520));
+
+        page_main.add(page_peraturan, "card3");
 
         add(page_main, "card2");
     }// </editor-fold>//GEN-END:initComponents
@@ -1185,7 +1315,49 @@ public class MenuPenyewaan extends javax.swing.JPanel {
     }//GEN-LAST:event_btn_simpanActionPerformed
 
     private void btn_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchActionPerformed
-        // TODO add your handling code here:
+      
+        DefaultTableModel model = (DefaultTableModel) table_sewa.getModel();
+        model.setRowCount(0); // Hanya hapus baris, jangan tambah kolom lagi!
+        model.addColumn("ID Sewa");
+        model.addColumn("Nama Penyewa");
+        model.addColumn("Nama Pegawai");
+        model.addColumn("Tanggal Sewa");
+        model.addColumn("Tanggal Rencana Kembali");
+        model.addColumn("Total Harga");
+        model.addColumn("Bayar");
+        model.addColumn("Kembalian");
+        model.addColumn("Jaminan");
+        model.addColumn("Status");
+
+        String keyword = txt_search.getText(); // ambil teks dari field pencarian
+
+        try {
+            String query = "SELECT penyewaan.*, pengguna.nama_pengguna, pelanggan.nama_pelanggan FROM penyewaan JOIN pelanggan " 
+                + "ON penyewaan.id_pelanggan = pelanggan.id_pelanggan JOIN pengguna ON penyewaan.id_pengguna = pengguna.id_pengguna WHERE pelanggan.nama_pelanggan LIKE ?";
+            pst = con.prepareStatement(query);
+            pst.setString(1, "%" + keyword + "%");
+            rs = pst.executeQuery();
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("id_sewa"),
+                    rs.getString("nama_pelanggan"),
+                    rs.getString("nama_pengguna"),
+                    rs.getString("tgl_sewa"),
+                    rs.getString("tgl_rencana_kembali"),
+                    rs.getString("total_harga"),
+                    rs.getString("bayar"),
+                    rs.getString("kembalian"),
+                    rs.getString("jaminan"),
+                    rs.getString("status")
+                });
+            }
+
+            table_sewa.setModel(model);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
+        }
     }//GEN-LAST:event_btn_searchActionPerformed
 
     private String idBarangTerpilih = "";
@@ -1193,7 +1365,12 @@ public class MenuPenyewaan extends javax.swing.JPanel {
 
 
     private void btn_searchBrgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchBrgActionPerformed
-        String keyword = txt_searchBrg.getText(); // TextField pencarian
+        String keyword = txt_searchBrg.getText().trim(); // hapus spasi depan/belakang
+
+        if (keyword.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Silakan isi nama barang yg akan dicari!");
+            return;
+        }
 
         try {
             String sql = "SELECT * FROM barang WHERE nama_barang LIKE ?";
@@ -1356,8 +1533,37 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         CekDanHitungKembalian();
     }//GEN-LAST:event_txt_bayarKeyReleased
 
+    
     private void btn_nextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_nextActionPerformed
-        // TODO add your handling code here:
+        String namaPenyewa = nama_penyewa.getText().trim();
+        String tglPinjam = tgl_pinjam.getText().trim();
+        String tglKembali = tgl_kembali.getText().trim();
+        String noHp = no_hp.getText().trim();
+        
+        String jaminan = "";
+
+        if (cek_sim.isSelected()) {
+            jaminan += cek_sim.getText() + ", ";
+        }
+        if (cek_ktp.isSelected()) {
+            jaminan += cek_ktp.getText() + ", ";
+        }
+        if (cek_ktm.isSelected()) {
+            jaminan += cek_ktm.getText() + ", ";
+        }
+        if (cek_fckk.isSelected()) {
+            jaminan += cek_fckk.getText() + ", ";
+        }
+
+        if (!jaminan.isEmpty()) {
+            jaminan = jaminan.substring(0, jaminan.length() - 2);
+        }
+
+        if (namaPenyewa.isEmpty() || noHp.isEmpty() || jaminan.isEmpty() || tglPinjam.isEmpty() || tglKembali.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Harap lengkapi semua data penyewa!");
+            return;
+        }
+
         page_main.removeAll();
         page_main.add(page_barang);
         page_main.repaint();
@@ -1476,9 +1682,90 @@ public class MenuPenyewaan extends javax.swing.JPanel {
 
     }//GEN-LAST:event_btn_notaActionPerformed
 
+    private void btn_hapus_barangActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapus_barangActionPerformed
+                                               
+    int selectedRow = table_barang.getSelectedRow();
+
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Silahkan pilih data yang ingin dihapus.",
+                "Peringatan",
+                JOptionPane.WARNING_MESSAGE
+        );
+        return;
+    }
+
+    DefaultTableModel model = (DefaultTableModel) table_barang.getModel();
+    
+    int jumlah = Integer.parseInt(model.getValueAt(selectedRow, 2).toString());
+    double harga = Integer.parseInt(model.getValueAt(selectedRow, 3).toString()); 
+
+    if (jumlah > 1) {
+        jumlah -= 1;
+        double subtotal = jumlah * harga;
+
+        model.setValueAt(jumlah, selectedRow, 2);    
+        model.setValueAt(subtotal, selectedRow, 4); 
+    } else {
+        int konfirmasi = JOptionPane.showConfirmDialog(
+                this,
+                "Jumlah tinggal 1. Hapus barang ini dari daftar?",
+                "Konfirmasi",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (konfirmasi == JOptionPane.YES_OPTION) {
+            model.removeRow(selectedRow);
+        }
+    }
+
+    hitungTotalHarga();
+
+    }//GEN-LAST:event_btn_hapus_barangActionPerformed
+
+    private void tgl_kembaliActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tgl_kembaliActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tgl_kembaliActionPerformed
+
+    private void txt_qtyKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txt_qtyKeyTyped
+        // TODO add your handling code here:
+        char c = evt.getKeyChar();
+        if (!Character.isDigit(c) && c != '\b') {
+            evt.consume();
+            Toolkit.getDefaultToolkit().beep();
+        }
+    }//GEN-LAST:event_txt_qtyKeyTyped
+
+    private void txt_bayarKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txt_bayarKeyTyped
+        // TODO add your handling code here:
+        char c = evt.getKeyChar();
+        if (!Character.isDigit(c) && c != '\b') {
+            evt.consume(); // ignore character kalau bukan angka
+            Toolkit.getDefaultToolkit().beep();
+        }
+    }//GEN-LAST:event_txt_bayarKeyTyped
+
+    private void btn_back2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_back2ActionPerformed
+        // TODO add your handling code here:
+        page_main.removeAll();
+        page_main.add(page_tambah);
+        page_main.repaint();
+        page_main.revalidate();
+    }//GEN-LAST:event_btn_back2ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        page_main.removeAll();
+        page_main.add(page_peraturan);
+        page_main.repaint();
+        page_main.revalidate();
+    }//GEN-LAST:event_jButton1ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_back;
+    private javax.swing.JButton btn_back2;
     private javax.swing.JButton btn_back9;
     private javax.swing.JButton btn_calender;
     private javax.swing.JButton btn_calender2;
@@ -1500,32 +1787,39 @@ public class MenuPenyewaan extends javax.swing.JPanel {
     private com.raven.datechooser.DateChooser dateChooser;
     private com.raven.datechooser.DateChooser dateChooser2;
     private javax.swing.Box.Filler filler1;
+    private javax.swing.Box.Filler filler2;
     private javax.swing.JPanel form_table_tambah;
     private javax.swing.JPanel form_tambah;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
-    private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel24;
     private javax.swing.JLabel jLabel25;
     private javax.swing.JLabel jLabel26;
     private javax.swing.JLabel jLabel28;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel30;
+    private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel32;
     private javax.swing.JLabel jLabel33;
     private javax.swing.JLabel jLabel34;
+    private javax.swing.JLabel jLabel35;
+    private javax.swing.JLabel jLabel36;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel label_username;
     private javax.swing.JLabel label_username2;
     private javax.swing.JLabel label_username3;
+    private javax.swing.JLabel label_username4;
     private javax.swing.JTextField nama_penyewa;
     private javax.swing.JTextField no_hp;
     private javax.swing.JPanel page_barang;
     private javax.swing.JPanel page_main;
     private javax.swing.JPanel page_penyewaan;
+    private javax.swing.JPanel page_peraturan;
     private javax.swing.JPanel page_tambah;
     private custom.JTable_customAutoresize table_barang;
     private custom.JTable_custom table_sewa;

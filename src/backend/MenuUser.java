@@ -26,7 +26,7 @@ public class MenuUser extends javax.swing.JPanel {
     public MenuUser() {
         initComponents();
                 label_username1.setText(Login.Session.getUsername());
-        label_username2.setText(Login.Session.getUsername());
+                label_username2.setText(Login.Session.getUsername());
                 label_username4.setText(Login.Session.getUsername());
 
 //        label_username3.setText(Login.Session.getUsername());
@@ -976,29 +976,49 @@ public class MenuUser extends javax.swing.JPanel {
         return idBaru;
     }
     
-    private void loadDataFromDatabase() throws java.sql.SQLException {
-        String query = "SELECT * FROM pengguna WHERE status = 'Aktif'";
-        try (Connection con = DriverManager.getConnection(url, user, DBpassword);
-             java.sql.Statement stmt = con.createStatement();
-             java.sql.ResultSet rs = stmt.executeQuery(query)) {
-             DefaultTableModel model = (DefaultTableModel) tb_user.getModel();
-             model.setRowCount(0);
-
-            while (rs.next()) {
-                Object[] row = {
-                rs.getString("id_pengguna"),
-                rs.getString("nama_lengkap"),
-                rs.getString("email"),
-                rs.getString("alamat"),
-                rs.getString("no_hp"),
-                rs.getString("nama_pengguna"),
-                rs.getString("role"),
-                rs.getString("password"),
-                };
-                model.addRow(row);
+    private void loadDataFromDatabase() throws SQLException {
+        DefaultTableModel model = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // biar read-only
             }
-        }    
-  }
+        };
+        model.addColumn("ID");
+        model.addColumn("Nama");
+        model.addColumn("Email");
+        model.addColumn("Alamat");
+        model.addColumn("No_HP");
+        model.addColumn("Username");
+        model.addColumn("Role");
+        model.addColumn("Password");
+
+        String query = "SELECT * FROM pengguna WHERE status = ?";
+
+        try (Connection con = DriverManager.getConnection(url, user, DBpassword);
+             PreparedStatement pstmt = con.prepareStatement(query)) {
+
+            pstmt.setString(1, "Aktif"); // Set parameter status = 'Aktif'
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    Object[] row = {
+                        rs.getString("id_pengguna"),
+                        rs.getString("nama_lengkap"),
+                        rs.getString("email"),
+                        rs.getString("alamat"),
+                        rs.getString("no_hp"),
+                        rs.getString("nama_pengguna"),
+                        rs.getString("role"),
+                        rs.getString("password"),
+                    };
+                    model.addRow(row);
+                }
+            }
+        }
+
+        tb_user.setModel(model);
+    }
+
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_hapus;
