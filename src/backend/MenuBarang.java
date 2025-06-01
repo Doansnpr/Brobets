@@ -4,27 +4,21 @@
  */
 package backend;
 
-import static backend.Koneksi.con;
 import java.awt.Color;
 import java.awt.Component;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JRadioButton;
 import javax.swing.table.DefaultTableModel;
-import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.*;
 import javax.swing.text.AbstractDocument;
-import backend.FormatHarga;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -205,7 +199,7 @@ public class MenuBarang extends javax.swing.JPanel {
                 }
             }
 
-            String[] manualStatuses = {"Rusak", "Hilang", "Maintenance"};
+            String[] manualStatuses = {"Tersedia"};
             for (String manualStatus : manualStatuses) {
                 if (statusSet.add(manualStatus)) {
                     cmb_status1.addItem(manualStatus);
@@ -288,8 +282,6 @@ public class MenuBarang extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Kesalahan database: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
-    
     
     private String generateID(String tableName, String idColumn, String prefix) {
         String newID = prefix + "001";
@@ -405,23 +397,50 @@ public class MenuBarang extends javax.swing.JPanel {
 
             try {
                 con = Koneksi.getConnection();
-                String idRusak = generateID("barang_bermasalah", "id_brg_bermasalah", "BMS");
-                String sqlInsert = "INSERT INTO barang_bermasalah (id_brg_bermasalah, id_barang, nama_barang, stok, harga_beli, status) VALUES (?, ?, ?, ?, ?, ?)";
+                String idRusak = generateID("BMS", "barang_bermasalah", "id_brg_bermasalah");
+                String sqlInsert = "INSERT INTO barang_bermasalah "
+                    + "(id_brg_bermasalah, id_barang, stok, harga_beli, status, sumber_rusak, id_detail_kembali) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
                 pst = con.prepareStatement(sqlInsert);
                 pst.setString(1, idRusak);
                 pst.setString(2, idBarang);
-                pst.setString(3, namaBarang);
-                pst.setInt(4, jumlahRusak);
-                pst.setInt(5, hargaBeli);
-                pst.setString(6, selectedKondisi);
+                pst.setInt(3, jumlahRusak);
+                pst.setInt(4, hargaBeli);
+                pst.setString(5, selectedKondisi);
+                pst.setString(6, "Internal");
+                pst.setNull(7, java.sql.Types.VARCHAR);
                 pst.executeUpdate();
 
-                // Kurangi stok di tabel barang
+                // Kurangi stok barang di tabel barang
                 String sqlUpdateStok = "UPDATE barang SET stok = stok - ? WHERE id_barang = ?";
                 PreparedStatement pst2 = con.prepareStatement(sqlUpdateStok);
                 pst2.setInt(1, jumlahRusak);
                 pst2.setString(2, idBarang);
                 pst2.executeUpdate();
+
+                // Validasi stok setelah update
+                String sqlCekStok = "SELECT stok FROM barang WHERE id_barang = ?";
+                PreparedStatement pstCekStok = con.prepareStatement(sqlCekStok);
+                pstCekStok.setString(1, idBarang);
+                ResultSet rsStok = pstCekStok.executeQuery();
+
+                if (rsStok.next()) {
+                    int sisaStok = rsStok.getInt("stok");
+                    if (sisaStok == 0) {
+                        String sqlUpdateStatus = "UPDATE barang SET status = ? WHERE id_barang = ?";
+                        PreparedStatement pstUpdateStatus = con.prepareStatement(sqlUpdateStatus);
+                        pstUpdateStatus.setString(1, "Disewa");
+                        pstUpdateStatus.setString(2, idBarang);
+                        pstUpdateStatus.executeUpdate();
+                        pstUpdateStatus.close();
+                    }
+                }
+
+                rsStok.close();
+                pstCekStok.close();
+                pst2.close();
+
 
                 JOptionPane.showMessageDialog(this, "Data barang rusak berhasil ditambahkan.");
 
@@ -430,8 +449,8 @@ public class MenuBarang extends javax.swing.JPanel {
                 page_main.repaint();
                 page_main.revalidate();
 
-                load_table(); // refresh tabel barang
-                tampilkanDataBarangRusak(); // refresh tabel rusak
+                load_table();
+                tampilkanDataBarangRusak();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage());
             }
@@ -440,29 +459,42 @@ public class MenuBarang extends javax.swing.JPanel {
 
     private void tampilkanDataBarangRusak() {
         DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("ID Bermasalah");
+        model.addColumn("ID Detail Pengembalian");
         model.addColumn("ID Barang");
         model.addColumn("Nama Barang");
         model.addColumn("Stok");
         model.addColumn("Harga Beli");
         model.addColumn("Status");
+        model.addColumn("Sumber Rusak");
 
         try {
             con = Koneksi.getConnection();
-            String sql = "SELECT id_brg_bermasalah, id_barang, nama_barang, stok, harga_beli, status FROM barang_bermasalah";
+            String sql = "SELECT bb.id_brg_bermasalah, bb.id_detail_kembali, bb.id_barang, "
+                       + "b.nama_barang, bb.stok, bb.harga_beli, bb.status, bb.sumber_rusak "
+                       + "FROM barang_bermasalah bb "
+                       + "JOIN barang b ON bb.id_barang = b.id_barang";
+
             pst = con.prepareStatement(sql);
-            rs = pst.executeQuery(sql);
+            rs = pst.executeQuery();
 
             while (rs.next()) {
                 model.addRow(new Object[]{
+                    rs.getString("id_brg_bermasalah"),
+                    rs.getString("id_detail_kembali"),
                     rs.getString("id_barang"),
                     rs.getString("nama_barang"),
                     rs.getInt("stok"),
                     rs.getInt("harga_beli"),
-                    rs.getString("status")
+                    rs.getString("status"),
+                    rs.getString("sumber_rusak")
                 });
             }
 
             tbl_rusak.setModel(model);
+
+            tbl_rusak.removeColumn(tbl_rusak.getColumnModel().getColumn(0));
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal menampilkan data barang rusak: " + e.getMessage());
         }
@@ -481,13 +513,11 @@ public class MenuBarang extends javax.swing.JPanel {
         model.addColumn("Status");
 
         try {
-            Koneksi.config();
-            Connection conn = Koneksi.getConnection();
             String sql = "SELECT id_barang, nama_barang, harga_sewa, kategori, stok, status, harga_beli, barcode "
                     + "FROM barang WHERE nama_barang LIKE ?";
-            PreparedStatement pst = conn.prepareStatement(sql);
+            pst = con.prepareStatement(sql);
             pst.setString(1, "%" + keyword + "%");
-            ResultSet rs = pst.executeQuery();
+            rs = pst.executeQuery();
 
             while (rs.next()) {
                 model.addRow(new Object[]{
@@ -510,38 +540,47 @@ public class MenuBarang extends javax.swing.JPanel {
     
     private void cariRusak() {
         String keyword = txt_search1.getText().trim();
-
+        
         DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("ID Bermasalah");
+        model.addColumn("ID Detail");
         model.addColumn("ID Barang");
         model.addColumn("Nama Barang");
-        model.addColumn("Harga beli");
-        model.addColumn("Kategori");
+        model.addColumn("Stok");
+        model.addColumn("Harga Beli");
         model.addColumn("Status");
+        model.addColumn("Sumber Rusak");
 
         try {
-            Koneksi.config();
-            Connection conn = Koneksi.getConnection();
-            String sql = "SELECT id_brg_bermasalah, id_barang, nama_barang, stok, harga_beli, status "
-                    + "FROM barang_bermasalah WHERE nama_barang LIKE ?";
-            PreparedStatement pst = conn.prepareStatement(sql);
+            con = Koneksi.getConnection();
+            String sql = "SELECT bb.id_brg_bermasalah, bb.id_detail_kembali, bb.id_barang, "
+                   + "b.nama_barang, bb.stok, bb.harga_beli, bb.status, bb.sumber_rusak "
+                   + "FROM barang_bermasalah bb "
+                   + "JOIN barang b ON bb.id_barang = b.id_barang "
+                   + "WHERE b.nama_barang LIKE ? AND bb.status LIKE ?";
+
+            pst = con.prepareStatement(sql);
             pst.setString(1, "%" + keyword + "%");
-            ResultSet rs = pst.executeQuery();
+            pst.setString(2, "%" + keyword + "%");
+            rs = pst.executeQuery();
 
             while (rs.next()) {
                 model.addRow(new Object[]{
+                    rs.getString("id_brg_bermasalah"),
+                    rs.getString("id_detail_kembali"),
                     rs.getString("id_barang"),
                     rs.getString("nama_barang"),
                     rs.getInt("stok"),
                     rs.getInt("harga_beli"),
-                    rs.getString("status")
+                    rs.getString("status"),
+                    rs.getString("sumber_rusak")
                 });
             }
 
-
             tbl_rusak.setModel(model);
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
+            tbl_rusak.removeColumn(tbl_rusak.getColumnModel().getColumn(0));
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencari data barang rusak: " + e.getMessage());
         }
     }
 
@@ -686,7 +725,7 @@ public class MenuBarang extends javax.swing.JPanel {
     }
     }
     
-     private void clearTambahBarang() {
+    private void clearTambahBarang() {
         txt_nama.setText("");
         txt_harga.setText("");
         txt_beli.setText("");
@@ -729,10 +768,10 @@ public class MenuBarang extends javax.swing.JPanel {
         jLabel28 = new javax.swing.JLabel();
         jLabel29 = new javax.swing.JLabel();
         form_tambah = new javax.swing.JPanel();
+        txt_stok = new javax.swing.JTextField();
         txt_harga = new javax.swing.JTextField();
         txt_nama = new javax.swing.JTextField();
         txt_beli = new javax.swing.JTextField();
-        txt_stok = new javax.swing.JTextField();
         cmb_kategori = new javax.swing.JComboBox<>();
         cmb_status = new javax.swing.JComboBox<>();
         jLabel13 = new javax.swing.JLabel();
@@ -758,8 +797,8 @@ public class MenuBarang extends javax.swing.JPanel {
         jLabel37 = new javax.swing.JLabel();
         btn_search1 = new javax.swing.JButton();
         txt_search1 = new javax.swing.JTextField();
-        jLabel7 = new javax.swing.JLabel();
         btn_back = new javax.swing.JButton();
+        btn_periksa = new javax.swing.JButton();
         btn_selesai = new javax.swing.JButton();
         jLabel15 = new javax.swing.JLabel();
         jLabel38 = new javax.swing.JLabel();
@@ -913,6 +952,10 @@ public class MenuBarang extends javax.swing.JPanel {
         form_tambah.setBackground(new java.awt.Color(255, 244, 232));
         form_tambah.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        txt_stok.setBackground(new java.awt.Color(255, 244, 232));
+        txt_stok.setBorder(null);
+        form_tambah.add(txt_stok, new org.netbeans.lib.awtextra.AbsoluteConstraints(85, 372, 410, 19));
+
         txt_harga.setText("Harga Sewa"); txt_harga.setForeground(Color.GRAY);
         txt_harga.setBackground(new java.awt.Color(255, 244, 232));
         txt_harga.setBorder(null);
@@ -920,6 +963,11 @@ public class MenuBarang extends javax.swing.JPanel {
 
         txt_nama.setBackground(new java.awt.Color(255, 244, 232));
         txt_nama.setBorder(null);
+        txt_nama.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txt_namaActionPerformed(evt);
+            }
+        });
         form_tambah.add(txt_nama, new org.netbeans.lib.awtextra.AbsoluteConstraints(83, 183, 410, 20));
 
         txt_beli.setText("Harga Beli"); txt_beli.setForeground(Color.GRAY);
@@ -928,21 +976,10 @@ public class MenuBarang extends javax.swing.JPanel {
         txt_beli.setBorder(null);
         form_tambah.add(txt_beli, new org.netbeans.lib.awtextra.AbsoluteConstraints(83, 278, 410, 20));
 
-        txt_stok.setText("Stok"); txt_stok.setForeground(Color.GRAY);
-        txt_stok.setBackground(new java.awt.Color(255, 244, 232));
-        txt_stok.setToolTipText("");
-        txt_stok.setBorder(null);
-        form_tambah.add(txt_stok, new org.netbeans.lib.awtextra.AbsoluteConstraints(83, 372, 410, 20));
-
         cmb_kategori.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         form_tambah.add(cmb_kategori, new org.netbeans.lib.awtextra.AbsoluteConstraints(83, 326, 410, 20));
 
         cmb_status.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cmb_status.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cmb_statusActionPerformed(evt);
-            }
-        });
         form_tambah.add(cmb_status, new org.netbeans.lib.awtextra.AbsoluteConstraints(83, 419, 410, 20));
 
         jLabel13.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/form tambah ubah.png"))); // NOI18N
@@ -1073,14 +1110,11 @@ public class MenuBarang extends javax.swing.JPanel {
                 btn_search1ActionPerformed(evt);
             }
         });
-        page_rusak.add(btn_search1, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 120, 50, 40));
+        page_rusak.add(btn_search1, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 112, 60, 60));
 
         txt_search1.setBackground(new java.awt.Color(238, 236, 227));
         txt_search1.setBorder(null);
-        page_rusak.add(txt_search1, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 130, 290, 20));
-
-        jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Search.png"))); // NOI18N
-        page_rusak.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 120, 410, -1));
+        page_rusak.add(txt_search1, new org.netbeans.lib.awtextra.AbsoluteConstraints(121, 132, 190, 20));
 
         btn_back.setContentAreaFilled(false);
 
@@ -1098,18 +1132,31 @@ public class MenuBarang extends javax.swing.JPanel {
 
         btn_hapus.setContentAreaFilled(false);
         btn_hapus.setBorderPainted(false);
-        btn_selesai.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/selesai.png"))); // NOI18N
+        btn_periksa.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/Periksa Barang.png"))); // NOI18N
+        btn_periksa.setBorder(null);
+        btn_periksa.setContentAreaFilled(false);
+        btn_periksa.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/Periksa Barang Select.png"))); // NOI18N
+        btn_periksa.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_periksaActionPerformed(evt);
+            }
+        });
+        page_rusak.add(btn_periksa, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 119, 120, 50));
+
+        btn_hapus.setContentAreaFilled(false);
+        btn_hapus.setBorderPainted(false);
+        btn_selesai.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/Perbaikan Selesai.png"))); // NOI18N
         btn_selesai.setBorder(null);
         btn_selesai.setContentAreaFilled(false);
-        btn_selesai.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/selesai select.png"))); // NOI18N
+        btn_selesai.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/Perbaikan Selesai Select.png"))); // NOI18N
         btn_selesai.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btn_selesaiActionPerformed(evt);
             }
         });
-        page_rusak.add(btn_selesai, new org.netbeans.lib.awtextra.AbsoluteConstraints(610, 120, 120, 40));
+        page_rusak.add(btn_selesai, new org.netbeans.lib.awtextra.AbsoluteConstraints(600, 119, 130, 50));
 
-        jLabel15.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/BG Button.png"))); // NOI18N
+        jLabel15.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/barang/Fitur Search (1).png"))); // NOI18N
         page_rusak.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 110, 720, 65));
 
         jLabel38.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Group 28.png"))); // NOI18N
@@ -1131,7 +1178,7 @@ public class MenuBarang extends javax.swing.JPanel {
         ));
         jScrollPane1.setViewportView(tbl_rusak);
 
-        page_rusak.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 190, 750, 400));
+        page_rusak.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 190, 730, 400));
 
         page_main.add(page_rusak, "card2");
 
@@ -1144,7 +1191,7 @@ public class MenuBarang extends javax.swing.JPanel {
 
     private void btn_tambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_tambahActionPerformed
         clearTambahBarang();
-
+        
         page_main.removeAll();
         page_main.add(page_tambah);
         page_main.repaint();
@@ -1204,7 +1251,7 @@ public class MenuBarang extends javax.swing.JPanel {
         }
     }//GEN-LAST:event_btn_barcodeActionPerformed
 
-     private String idBarangYangSedangDiedit;
+    private String idBarangYangSedangDiedit;
     
     private void btn_ubahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_ubahActionPerformed
         int selectedRow = tbl_barang.getSelectedRow();
@@ -1239,10 +1286,6 @@ public class MenuBarang extends javax.swing.JPanel {
 
         idBarangYangSedangDiedit = selectedidBarang;
     }//GEN-LAST:event_btn_ubahActionPerformed
-
-    private void cmb_statusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmb_statusActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cmb_statusActionPerformed
 
     private void btn_simpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_simpanActionPerformed
         String nama_barang, kategori, status, save;
@@ -1433,11 +1476,14 @@ public class MenuBarang extends javax.swing.JPanel {
         DefaultTableModel modelRusak = (DefaultTableModel) tbl_rusak.getModel();
         DefaultTableModel modelBarang = (DefaultTableModel) tbl_barang.getModel();
 
-        String idBarang = modelRusak.getValueAt(selectedRow, 0).toString();
-        String namaBarang = modelRusak.getValueAt(selectedRow, 1).toString();
-        int jumlahRusak = Integer.parseInt(modelRusak.getValueAt(selectedRow, 2).toString()); // stok rusak
-        int hargaBeli = Integer.parseInt(modelRusak.getValueAt(selectedRow, 3).toString());
-        String status = modelRusak.getValueAt(selectedRow, 4).toString();
+        String idBermasalah = modelRusak.getValueAt(selectedRow, 0).toString();
+        String idDetailKembali = modelRusak.getValueAt(selectedRow, 1).toString();
+        String idBarang = modelRusak.getValueAt(selectedRow, 2).toString();
+        String namaBarang = modelRusak.getValueAt(selectedRow, 3).toString();
+        int jumlahRusak = Integer.parseInt(modelRusak.getValueAt(selectedRow, 4).toString()); 
+        int hargaBeli = Integer.parseInt(modelRusak.getValueAt(selectedRow, 5).toString());
+        String status = modelRusak.getValueAt(selectedRow, 6).toString();
+        String sumberRusak = modelRusak.getValueAt(selectedRow, 7).toString(); 
 
         if (!status.equalsIgnoreCase("Maintenance")) {
             JOptionPane.showMessageDialog(this, "Hanya barang dengan status 'Maintenance' yang dapat dikembalikan.");
@@ -1480,7 +1526,7 @@ public class MenuBarang extends javax.swing.JPanel {
             boolean found = false;
             for (int i = 0; i < modelBarang.getRowCount(); i++) {
                 if (modelBarang.getValueAt(i, 0).toString().equals(idBarang)) {
-                    int stokLama = Integer.parseInt(modelBarang.getValueAt(i, 4).toString()); // stok di tbl_barang kolom 4
+                    int stokLama = Integer.parseInt(modelBarang.getValueAt(i, 4).toString()); // stok kolom 4
                     int stokBaru = stokLama + jumlahPerbaikan;
                     modelBarang.setValueAt(stokBaru, i, 4);
 
@@ -1498,40 +1544,37 @@ public class MenuBarang extends javax.swing.JPanel {
             }
 
             if (!found) {
-                // Jika barang belum ada di tbl_barang, insert baru
+                // Insert barang baru jika belum ada di tbl_barang
                 String sqlInsert = "INSERT INTO barang (id_barang, nama_barang, harga_sewa, harga_beli, kategori, stok, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 PreparedStatement pstInsert = con.prepareStatement(sqlInsert);
                 pstInsert.setString(1, idBarang);
                 pstInsert.setString(2, namaBarang);
-                pstInsert.setInt(3, 0); // harga sewa default
+                pstInsert.setInt(3, 0); 
                 pstInsert.setInt(4, hargaBeli);
-                pstInsert.setString(5, ""); // kategori default
+                pstInsert.setString(5, ""); 
                 pstInsert.setInt(6, jumlahPerbaikan);
-                pstInsert.setString(7, "Ready");
+                pstInsert.setString(7, "Tersedia");
                 pstInsert.executeUpdate();
                 pstInsert.close();
 
                 modelBarang.addRow(new Object[]{idBarang, namaBarang, 0, hargaBeli, jumlahPerbaikan, "Ready"});
             }
 
-            // Kurangi jumlah barang rusak di tbl_rusak dan database
             int sisaRusak = jumlahRusak - jumlahPerbaikan;
 
             if (sisaRusak > 0) {
-                modelRusak.setValueAt(sisaRusak, selectedRow, 2); // update stok rusak di kolom 2
+                modelRusak.setValueAt(sisaRusak, selectedRow, 4); 
 
-                // Update di database barang_bermasalah (stok)
-                String sqlUpdateRusak = "UPDATE barang_bermasalah SET stok = ? WHERE id_barang = ? AND status = 'Maintenance'";
+                String sqlUpdateRusak = "UPDATE barang_bermasalah SET stok = ? WHERE id_brg_bermasalah = ?";
                 PreparedStatement pstUpdateRusak = con.prepareStatement(sqlUpdateRusak);
                 pstUpdateRusak.setInt(1, sisaRusak);
-                pstUpdateRusak.setString(2, idBarang);
+                pstUpdateRusak.setString(2, idBermasalah);
                 pstUpdateRusak.executeUpdate();
                 pstUpdateRusak.close();
             } else {
-                // Jika habis, hapus data di database dan tabel rusak
-                String sqlDelete = "DELETE FROM barang_bermasalah WHERE id_barang = ? AND status = 'Maintenance'";
+                String sqlDelete = "DELETE FROM barang_bermasalah WHERE id_brg_bermasalah = ?";
                 PreparedStatement pstDelete = con.prepareStatement(sqlDelete);
-                pstDelete.setString(1, idBarang);
+                pstDelete.setString(1, idBermasalah);
                 pstDelete.executeUpdate();
                 pstDelete.close();
 
@@ -1540,24 +1583,100 @@ public class MenuBarang extends javax.swing.JPanel {
 
             JOptionPane.showMessageDialog(this, "Barang berhasil diperbaiki dan stok diperbarui.");
 
-            // Refresh tampilan halaman barang/rusak
             page_main.removeAll();
             page_main.add(page_barang);
             page_main.repaint();
             page_main.revalidate();
 
-            load_table(); // reload data barang dan rusak
+            load_table();
             tampilkanDataBarangRusak();
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Terjadi kesalahan: " + e.getMessage());
         }
     }//GEN-LAST:event_btn_selesaiActionPerformed
+
+    private void btn_periksaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_periksaActionPerformed
+         int[] selectedRows = tbl_rusak.getSelectedRows();
+
+        if (selectedRows.length == 0) {
+            JOptionPane.showMessageDialog(null, "Pilih barang yang akan diperiksa!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        DefaultTableModel model = (DefaultTableModel) tbl_rusak.getModel();
+
+        for (int row : selectedRows) {
+            String statusBarang = model.getValueAt(row, 6).toString(); // Kolom ke-6 = status
+            if (!statusBarang.equalsIgnoreCase("Menunggu Pemeriksaan")) {
+            JOptionPane.showMessageDialog(null, "Hanya barang dengan status 'Menunggu Pemeriksaan' yang bisa diperiksa!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        }
+
+        String[] options = {"Rusak", "Maintenance"};
+        String newStatus = (String) JOptionPane.showInputDialog(
+            null,
+            "Pilih status baru untuk barang yang dipilih:",
+            "Proses Pemeriksaan",
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[0]
+        );
+
+        if (newStatus != null) {
+            try {
+                con.setAutoCommit(false);
+
+                String sqlUpdate = "UPDATE barang_bermasalah SET status = ? WHERE id_brg_bermasalah = ?";
+                PreparedStatement pstUpdate = con.prepareStatement(sqlUpdate);
+
+                for (int row : selectedRows) {
+                    String idMasalah = model.getValueAt(row, 0).toString();
+
+
+                    pstUpdate.setString(1, newStatus);
+                    pstUpdate.setString(2, idMasalah);
+                    pstUpdate.addBatch();
+                }
+
+                pstUpdate.executeBatch();
+                con.commit();
+
+                JOptionPane.showMessageDialog(null, "Status barang berhasil diupdate ke '" + newStatus + "'");
+
+                tampilkanDataBarangRusak();
+
+            } catch (SQLException ex) {
+                try {
+                    con.rollback();
+                } catch (SQLException rollbackEx) {
+                    rollbackEx.printStackTrace();
+                }
+                JOptionPane.showMessageDialog(null, "Gagal update status: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            } finally {
+                try {
+                    con.setAutoCommit(true);
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }//GEN-LAST:event_btn_periksaActionPerformed
+
+    private void txt_namaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txt_namaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txt_namaActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_back;
     private javax.swing.JButton btn_barcode;
     private javax.swing.JButton btn_hapus;
+    private javax.swing.JButton btn_periksa;
     private javax.swing.JButton btn_rusak;
     private javax.swing.JButton btn_search;
     private javax.swing.JButton btn_search1;
@@ -1591,7 +1710,6 @@ public class MenuBarang extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel38;
     private javax.swing.JLabel jLabel39;
     private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane3;

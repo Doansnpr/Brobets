@@ -50,7 +50,7 @@ public class PanelDetailKembali extends javax.swing.JPanel {
             while (rs.next()) {
                 String namaBarang = rs.getString("nama_barang");
                 int jumlah = rs.getInt("jumlah");
-                int kondisi = rs.getInt("kondisi");          
+                String kondisi = rs.getString("kondisi");          
                 int denda = rs.getInt("denda_barang"); 
 
                 model.addRow(new Object[]{
@@ -60,6 +60,11 @@ public class PanelDetailKembali extends javax.swing.JPanel {
 
 
             table_detail.setModel(model);
+            table_detail.getColumnModel().getColumn(0).setPreferredWidth(60);
+            table_detail.getColumnModel().getColumn(1).setPreferredWidth(120);
+            table_detail.getColumnModel().getColumn(2).setPreferredWidth(80);
+            table_detail.getColumnModel().getColumn(3).setPreferredWidth(80);
+            table_detail.getColumnModel().getColumn(4).setPreferredWidth(120);
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Gagal load detail pengembalian: " + e.getMessage());
@@ -77,8 +82,8 @@ public class PanelDetailKembali extends javax.swing.JPanel {
 
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        table_detail = new custom.JTable_customAutoresize();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        table_detail = new custom.JTable_custom();
 
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -97,39 +102,39 @@ public class PanelDetailKembali extends javax.swing.JPanel {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane2.setViewportView(table_detail);
+        jScrollPane1.setViewportView(table_detail);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(63, 63, 63)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 23, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 406, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(16, 16, 16)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 366, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(21, 21, 21))
+                .addContainerGap(30, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 443, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(27, 27, 27))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(14, 14, 14)
+                .addGap(21, 21, 21)
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(21, Short.MAX_VALUE))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 279, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(35, Short.MAX_VALUE))
         );
 
-        add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 450, 340));
+        add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 500, 380));
     }// </editor-fold>//GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private custom.JTable_customAutoresize table_detail;
+    private javax.swing.JScrollPane jScrollPane1;
+    private custom.JTable_custom table_detail;
     // End of variables declaration//GEN-END:variables
 }

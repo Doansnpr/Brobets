@@ -401,7 +401,7 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         ));
         jScrollPane1.setViewportView(tbl_stok);
 
-        page_stokmasuk.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 250, 740, 420));
+        page_stokmasuk.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 250, 740, 380));
 
         page_mainn.add(page_stokmasuk, "card2");
 

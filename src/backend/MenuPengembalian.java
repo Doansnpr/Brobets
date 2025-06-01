@@ -32,20 +32,68 @@ public class MenuPengembalian extends javax.swing.JPanel {
     Connection con;
     PreparedStatement pst;
     ResultSet rs;
+    
+    private final List<Integer> originalQuantities = new ArrayList<>();
+    private final List<String> listIdKembali = new ArrayList<>();
 
     public MenuPengembalian() {
         initComponents();
         label_username.setText(Login.Session.getUsername());
         label_username2.setText(Login.Session.getUsername());
-        label_username3.setText(Login.Session.getUsername());
-        label_username4.setText(Login.Session.getUsername());
-        label_username.setText(Login.Session.getUsername());
-        label_username2.setText(Login.Session.getUsername());
         label_username3.setText( Login.Session.getUsername());
         label_username4.setText(Login.Session.getUsername());
-
+        
+        search();
         tampilDataPenyewaan();
 
+    }
+    
+    private void search(){
+        txt_search.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+        @Override
+        public void insertUpdate(javax.swing.event.DocumentEvent e) {
+            cariPengembalian();
+        }
+        @Override
+        public void removeUpdate(javax.swing.event.DocumentEvent e) {
+            cariPengembalian();
+        }
+        @Override
+        public void changedUpdate(javax.swing.event.DocumentEvent e) {
+            cariPengembalian();
+        }
+    });
+    }
+    
+    private void cariPengembalian() {
+        String keyword = txt_search.getText().trim();
+
+        DefaultTableModel model = (DefaultTableModel) table_kembali.getModel();
+        model.setRowCount(0);
+
+        try {
+            String sql = "SELECT penyewaan.*, pengguna.nama_pengguna, pelanggan.nama_pelanggan "
+                        + "FROM penyewaan "
+                        + "JOIN pelanggan ON penyewaan.id_pelanggan = pelanggan.id_pelanggan "
+                        + "JOIN pengguna ON penyewaan.id_pengguna = pengguna.id_pengguna "
+                        + "WHERE pelanggan.nama_pelanggan LIKE ? AND penyewaan.Status != 'Sudah Kembali'";
+            pst = con.prepareStatement(sql);
+            pst.setString(1, "%" + keyword + "%");
+            rs = pst.executeQuery();
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("id_sewa"),
+                    rs.getString("nama_pelanggan"),
+                    rs.getDate("tgl_sewa"),
+                    rs.getDate("tgl_rencana_kembali"),
+                    rs.getString("jaminan")
+                });
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
+        }
     }
 
     public void tampilDataPenyewaan() {
@@ -84,8 +132,6 @@ public class MenuPengembalian extends javax.swing.JPanel {
 
     }
 
-    private List<String> listIdKembali = new ArrayList<>();
-
     public void tampilDataRiwayatPengembalian() {
         DefaultTableModel model = new DefaultTableModel();
         model.addColumn("ID Pengembalian");
@@ -94,7 +140,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
         model.addColumn("Denda Keterlambatan");
         model.addColumn("Total Denda");
 
-        listIdKembali.clear(); // clear list dulu setiap refresh
+        listIdKembali.clear();
 
         try {
             String sql = "SELECT p.id_kembali, p.id_sewa, p.tgl_kembali, p.status, p.denda_keterlambatan, p.total_denda "
@@ -126,8 +172,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
         DefaultTableModel model = new DefaultTableModel() {
             @Override
             public boolean isCellEditable(int row, int column) {
-                // Kolom Jumlah Kembali dan Kondisi bisa diedit
-                return column == 3 || column == 4;
+               return column == 4;
             }
         };
 
@@ -137,14 +182,16 @@ public class MenuPengembalian extends javax.swing.JPanel {
         model.addColumn("Jumlah Kembali");
         model.addColumn("Kondisi");
 
+        originalQuantities.clear();
+
         try {
             Koneksi.config();
             con = Koneksi.getConnection();
 
             String sql = "SELECT ds.id_barang, b.nama_barang, ds.qty "
-                    + "FROM detail_sewa ds "
-                    + "JOIN barang b ON ds.id_barang = b.id_barang "
-                    + "WHERE ds.id_sewa = ?";
+                       + "FROM detail_sewa ds "
+                       + "JOIN barang b ON ds.id_barang = b.id_barang "
+                       + "WHERE ds.id_sewa = ?";
 
             pst = con.prepareStatement(sql);
             pst.setString(1, idSewa);
@@ -157,6 +204,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
 
                 for (int i = 0; i < qty; i++) {
                     model.addRow(new Object[]{idBarang, namaBarang, 1, 1, "Baik"});
+                    originalQuantities.add(1);
                 }
             }
 
@@ -176,12 +224,9 @@ public class MenuPengembalian extends javax.swing.JPanel {
                         String kondisi = (String) model.getValueAt(row, 4);
 
                         if ("Hilang".equals(kondisi)) {
-                            model.setValueAt(0, row, 3);
+                            model.setValueAt(1, row, 3);
                         } else {
-                            if (model.getValueAt(row, 3) == null || model.getValueAt(row, 3).toString().isEmpty()
-                                    || model.getValueAt(row, 3).toString().equals("0")) {
-                                model.setValueAt("", row, 3);
-                            }
+                            model.setValueAt(originalQuantities.get(row), row, 3);
                         }
                     }
 
@@ -197,7 +242,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(null, "Gagal memuat barang: " + e.getMessage());
         }
     }
-
+    
     public int parseRupiah(String rpText) {
         try {
             String clean = rpText.replace("Rp", "")
@@ -557,7 +602,6 @@ public class MenuPengembalian extends javax.swing.JPanel {
                 String idBarang = model.getValueAt(i, 0).toString();
                 String kondisi = model.getValueAt(i, 4).toString();
 
-                // Ambil harga beli
                 String sql = "SELECT harga_beli FROM barang WHERE id_barang = ?";
                 pst = con.prepareStatement(sql);
                 pst.setString(1, idBarang);
@@ -567,10 +611,8 @@ public class MenuPengembalian extends javax.swing.JPanel {
                     int hargaBeli = rs.getInt("harga_beli");
 
                     if (kondisi.equalsIgnoreCase("Hilang")) {
-                        // Jika hilang, denda = harga beli * 1 (karena hilang 1 barang)
                         totalDendaKerusakan += hargaBeli;
                     } else if (kondisi.equalsIgnoreCase("Rusak")) {
-                        // Jika rusak, denda = harga beli * jumlah kembali
                         int jumlahKembali = Integer.parseInt(model.getValueAt(i, 3).toString());
                         totalDendaKerusakan += hargaBeli * jumlahKembali;
                     }
@@ -618,6 +660,8 @@ public class MenuPengembalian extends javax.swing.JPanel {
         dateChooser = new com.raven.datechooser.DateChooser();
         page_main = new javax.swing.JPanel();
         page_pengembalian = new javax.swing.JPanel();
+        txt_search = new javax.swing.JTextField();
+        btn_search = new javax.swing.JButton();
         btn_riwayat = new javax.swing.JButton();
         btn_retur = new javax.swing.JButton();
         jLabel17 = new javax.swing.JLabel();
@@ -626,11 +670,9 @@ public class MenuPengembalian extends javax.swing.JPanel {
         jLabel18 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
-        btn_search = new javax.swing.JButton();
-        txt_search = new javax.swing.JTextField();
-        btn_search1 = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         table_kembali = new custom.JTable_customAutoresize();
+        txt_search2 = new javax.swing.JTextField();
         page_tambah = new javax.swing.JPanel();
         jLabel28 = new javax.swing.JLabel();
         jLabel29 = new javax.swing.JLabel();
@@ -688,6 +730,29 @@ public class MenuPengembalian extends javax.swing.JPanel {
         page_pengembalian.setBackground(new java.awt.Color(255, 244, 232));
         page_pengembalian.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        txt_search.setBackground(new java.awt.Color(238, 236, 227));
+        txt_search.setBorder(null);
+        txt_search.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txt_searchActionPerformed(evt);
+            }
+        });
+        page_pengembalian.add(txt_search, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 141, 300, 20));
+
+        btn_search.setContentAreaFilled(false);
+
+        btn_search.setBorderPainted(false);
+        btn_search.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/pengembalian/Button Search.png"))); // NOI18N
+        btn_search.setBorder(null);
+        btn_search.setContentAreaFilled(false);
+        btn_search.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/pengembalian/Button Search Select.png"))); // NOI18N
+        btn_search.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_searchActionPerformed(evt);
+            }
+        });
+        page_pengembalian.add(btn_search, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 130, 50, 40));
+
         btn_retur.setContentAreaFilled(false);
         btn_retur.setBorderPainted(false);
         btn_riwayat.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/pengembalian/Button Riwayat.png"))); // NOI18N
@@ -732,43 +797,6 @@ public class MenuPengembalian extends javax.swing.JPanel {
         jLabel12.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/BG Button.png"))); // NOI18N
         page_pengembalian.add(jLabel12, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 120, 720, 65));
 
-        btn_search.setContentAreaFilled(false);
-
-        btn_search.setBorderPainted(false);
-        btn_search.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/pengembalian/Button Search.png"))); // NOI18N
-        btn_search.setBorder(null);
-        btn_search.setContentAreaFilled(false);
-        btn_search.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/pengembalian/Button Search Select.png"))); // NOI18N
-        btn_search.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btn_searchActionPerformed(evt);
-            }
-        });
-        page_pengembalian.add(btn_search, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 130, 50, 40));
-
-        txt_search.setBackground(new java.awt.Color(238, 236, 227));
-        txt_search.setBorder(null);
-        txt_search.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txt_searchActionPerformed(evt);
-            }
-        });
-        page_pengembalian.add(txt_search, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 141, 300, 20));
-
-        btn_search.setContentAreaFilled(false);
-
-        btn_search.setBorderPainted(false);
-        btn_search1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Button Search.png"))); // NOI18N
-        btn_search1.setBorder(null);
-        btn_search1.setContentAreaFilled(false);
-        btn_search1.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/penyewaan/Button Search Select.png"))); // NOI18N
-        btn_search1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btn_search1ActionPerformed(evt);
-            }
-        });
-        page_pengembalian.add(btn_search1, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 130, 50, 40));
-
         table_kembali.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
@@ -783,6 +811,10 @@ public class MenuPengembalian extends javax.swing.JPanel {
         jScrollPane1.setViewportView(table_kembali);
 
         page_pengembalian.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 210, 740, 420));
+
+        txt_search2.setBackground(new java.awt.Color(238, 236, 227));
+        txt_search2.setBorder(null);
+        page_pengembalian.add(txt_search2, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 140, 290, 20));
 
         page_main.add(page_pengembalian, "card2");
 
@@ -799,14 +831,17 @@ public class MenuPengembalian extends javax.swing.JPanel {
         form_tambah.setBackground(new java.awt.Color(255, 244, 232));
         form_tambah.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        txt_jaminan.setEditable(false);
         txt_jaminan.setBackground(new java.awt.Color(255, 244, 232));
         txt_jaminan.setBorder(null);
         form_tambah.add(txt_jaminan, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 404, 430, 30));
 
+        ID_transaksi.setEditable(false);
         ID_transaksi.setBackground(new java.awt.Color(255, 244, 232));
         ID_transaksi.setBorder(null);
         form_tambah.add(ID_transaksi, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 80, 430, 30));
 
+        txt_nama_penyewa.setEditable(false);
         txt_nama_penyewa.setBackground(new java.awt.Color(255, 244, 232));
         txt_nama_penyewa.setBorder(null);
         form_tambah.add(txt_nama_penyewa, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 142, 430, 30));
@@ -815,10 +850,12 @@ public class MenuPengembalian extends javax.swing.JPanel {
         tgl_kembali.setBorder(null);
         form_tambah.add(tgl_kembali, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 206, 390, 30));
 
+        txt_status.setEditable(false);
         txt_status.setBackground(new java.awt.Color(255, 244, 232));
         txt_status.setBorder(null);
         form_tambah.add(txt_status, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 274, 440, 30));
 
+        denda_terlambat.setEditable(false);
         denda_terlambat.setBackground(new java.awt.Color(255, 244, 232));
         denda_terlambat.setBorder(null);
         form_tambah.add(denda_terlambat, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 340, 430, 30));
@@ -904,6 +941,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
 
         form_table_tambah.add(jScrollPane3, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 30, 560, 320));
 
+        total_denda.setEditable(false);
         total_denda.setBackground(new java.awt.Color(255, 244, 232));
         total_denda.setToolTipText("");
         total_denda.setBorder(null);
@@ -917,6 +955,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
         });
         form_table_tambah.add(total_denda, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 450, 200, 30));
 
+        denda_kerusakan.setEditable(false);
         denda_kerusakan.setBackground(new java.awt.Color(255, 244, 232));
         denda_kerusakan.setToolTipText("");
         denda_kerusakan.setBorder(null);
@@ -930,6 +969,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
         });
         form_table_tambah.add(denda_kerusakan, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 389, 200, 30));
 
+        txt_kembalian.setEditable(false);
         txt_kembalian.setBackground(new java.awt.Color(255, 244, 232));
         txt_kembalian.setBorder(null);
         form_table_tambah.add(txt_kembalian, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 450, 210, 30));
@@ -1095,6 +1135,42 @@ public class MenuPengembalian extends javax.swing.JPanel {
 
     private void btn_searchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_searchActionPerformed
         // TODO add your handling code here:
+         DefaultTableModel model = (DefaultTableModel) table_kembali.getModel();
+        model.setRowCount(0);
+        model.addColumn("ID Sewa");
+        model.addColumn("Nama Penyewa");
+        model.addColumn("Tgl Sewa");
+        model.addColumn("Tgl Rencana Kembali");
+        model.addColumn("Jaminan");
+
+
+        String keyword = txt_search.getText();
+
+        try {
+            String sql = "SELECT penyewaan.*, pengguna.nama_pengguna, pelanggan.nama_pelanggan "
+                        + "FROM penyewaan "
+                        + "JOIN pelanggan ON penyewaan.id_pelanggan = pelanggan.id_pelanggan "
+                        + "JOIN pengguna ON penyewaan.id_pengguna = pengguna.id_pengguna "
+                        + "WHERE pelanggan.nama_pelanggan LIKE ? AND penyewaan.Status != 'Sudah Kembali'";
+            pst = con.prepareStatement(sql);
+            pst.setString(1, "%" + keyword + "%");
+            rs = pst.executeQuery();
+
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("id_sewa"),
+                    rs.getString("nama_pelanggan"),
+                    rs.getDate("tgl_sewa"),
+                    rs.getDate("tgl_rencana_kembali"),
+                    rs.getString("jaminan")
+                });
+            }
+
+            table_kembali.setModel(model);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
+        }
     }//GEN-LAST:event_btn_searchActionPerformed
 
     private void btn_returActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_returActionPerformed
@@ -1160,10 +1236,6 @@ public class MenuPengembalian extends javax.swing.JPanel {
         loadBarangKembali(idSewa);
     }//GEN-LAST:event_btn_nextActionPerformed
 
-    private void btn_search1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_search1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btn_search1ActionPerformed
-
     private void btn_backActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_backActionPerformed
         // TODO add your handling code here:
         page_main.removeAll();
@@ -1183,99 +1255,150 @@ public class MenuPengembalian extends javax.swing.JPanel {
     }//GEN-LAST:event_btn_riwayatActionPerformed
 
     private void btn_simpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_simpanActionPerformed
+    String idPengembalian = generateID("PM", "pengembalian", "id_kembali");
+    String idSewa = ID_transaksi.getText();
+    String tanggalKembali = tgl_kembali.getText();
+    String status = txt_status.getText();
+    int dendaKeterlambatan = parseRupiah(denda_terlambat.getText());
+    int totalDenda = parseRupiah(total_denda.getText());
+    String bayarStr = txt_bayar.getText().replace("Rp", "").replace(".", "").replaceAll("\\s+", "");
+    String kembalianStr = txt_kembalian.getText().replace("Rp", "").replace(".", "").replaceAll("\\s+", "");
+    int bayar = Integer.parseInt(bayarStr);
+    int kembalian = Integer.parseInt(kembalianStr);
 
-        String idPengembalian = generateID("PM", "pengembalian", "id_kembali");
-        String idSewa = ID_transaksi.getText();
-        String tanggalKembali = tgl_kembali.getText();
-        String status = txt_status.getText();
-        int dendaKeterlambatan = parseRupiah(denda_terlambat.getText());
-        int totalDenda = parseRupiah(total_denda.getText());
-        String bayarStr = txt_bayar.getText().replace("Rp", "").replace(".", "").replaceAll("\\s+", "");
-        String kembalianStr = txt_kembalian.getText().replace("Rp", "").replace(".", "").replaceAll("\\s+", "");
-        int bayar = Integer.parseInt(bayarStr);
-        int kembalian = Integer.parseInt(kembalianStr);
+    try {
+        String sqlPengembalian = "INSERT INTO pengembalian (id_kembali, id_sewa, tgl_kembali, status, denda_keterlambatan, total_denda, bayar, kembalian) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        pst = con.prepareStatement(sqlPengembalian);
+        pst.setString(1, idPengembalian);
+        pst.setString(2, idSewa);
+        pst.setString(3, tanggalKembali);
+        pst.setString(4, status);
+        pst.setInt(5, dendaKeterlambatan);
+        pst.setInt(6, totalDenda);
+        pst.setInt(7, bayar);
+        pst.setInt(8, kembalian);
+        pst.executeUpdate();
 
-        try {
-            // Simpan ke tabel pengembalian
-            String sqlPengembalian = "INSERT INTO pengembalian (id_kembali, id_sewa, tgl_kembali, status, denda_keterlambatan, total_denda, bayar, kembalian) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            pst = con.prepareStatement(sqlPengembalian);
-            pst.setString(1, idPengembalian);
-            pst.setString(2, idSewa);
-            pst.setString(3, tanggalKembali);
-            pst.setString(4, status);
-            pst.setInt(5, dendaKeterlambatan);
-            pst.setInt(6, totalDenda);
-            pst.setInt(7, bayar);
-            pst.setInt(8, kembalian);
-            pst.executeUpdate();
+        for (int i = 0; i < table_barang_kembali.getRowCount(); i++) {
+            String idBarang = table_barang_kembali.getValueAt(i, 0).toString();
+            int jumlahKembali = Integer.parseInt(table_barang_kembali.getValueAt(i, 3).toString());
+            String kondisi = table_barang_kembali.getValueAt(i, 4).toString();
 
-            // Simpan detail pengembalian
-            for (int i = 0; i < table_barang_kembali.getRowCount(); i++) {
-                String idBarang = table_barang_kembali.getValueAt(i, 0).toString();
-                int jumlahKembali = Integer.parseInt(table_barang_kembali.getValueAt(i, 3).toString());
-                String kondisi = table_barang_kembali.getValueAt(i, 4).toString();
+            int dendaBarang = 0;
 
-                int dendaBarang = 0;
+            if (kondisi.equalsIgnoreCase("Rusak") || kondisi.equalsIgnoreCase("Hilang")) {
+                String queryHarga = "SELECT harga_beli FROM barang WHERE id_barang = ?";
+                PreparedStatement pstHarga = con.prepareStatement(queryHarga);
+                pstHarga.setString(1, idBarang);
+                ResultSet rsHarga = pstHarga.executeQuery();
 
-                if (kondisi.equalsIgnoreCase("Rusak") || kondisi.equalsIgnoreCase("Hilang")) {
-                    String queryHarga = "SELECT harga_beli FROM barang WHERE id_barang = ?";
-                    PreparedStatement pstHarga = con.prepareStatement(queryHarga);
-                    pstHarga.setString(1, idBarang);
-                    ResultSet rsHarga = pstHarga.executeQuery();
-
-                    if (rsHarga.next()) {
-                        int hargaBeli = rsHarga.getInt("harga_beli");
-                        dendaBarang = hargaBeli * jumlahKembali;
-                    }
-
-                    rsHarga.close();
-                    pstHarga.close();
+                if (rsHarga.next()) {
+                    int hargaBeli = rsHarga.getInt("harga_beli");
+                    dendaBarang = hargaBeli * jumlahKembali;
                 }
 
-                // Insert ke detail_pengembalian
-                String idDetail = generateID("DTP", "detail_pengembalian", "id_detail_kembali");
-                String sqlDetail = "INSERT INTO detail_pengembalian (id_detail_kembali, id_kembali, id_barang, jumlah, kondisi, denda_barang) VALUES (?, ?, ?, ?, ?, ?)";
-                PreparedStatement pstDetail = con.prepareStatement(sqlDetail);
-                pstDetail.setString(1, idDetail);
-                pstDetail.setString(2, idPengembalian);
-                pstDetail.setString(3, idBarang);
-                pstDetail.setInt(4, jumlahKembali);
-                pstDetail.setString(5, kondisi);
-                pstDetail.setInt(6, dendaBarang);
-                pstDetail.executeUpdate();
+                rsHarga.close();
+                pstHarga.close();
             }
 
-            // Update status penyewaan
-            String sqlUpdate = "UPDATE penyewaan SET status = 'Sudah Kembali' WHERE id_sewa = ?";
-            PreparedStatement pstUpdate = con.prepareStatement(sqlUpdate);
-            pstUpdate.setString(1, idSewa);
-            pstUpdate.executeUpdate();
+            String idDetail = generateID("DTP", "detail_pengembalian", "id_detail_kembali");
+            String sqlDetail = "INSERT INTO detail_pengembalian (id_detail_kembali, id_kembali, id_barang, jumlah, kondisi, denda_barang) VALUES (?, ?, ?, ?, ?, ?)";
+            PreparedStatement pstDetail = con.prepareStatement(sqlDetail);
+            pstDetail.setString(1, idDetail);
+            pstDetail.setString(2, idPengembalian);
+            pstDetail.setString(3, idBarang);
+            pstDetail.setInt(4, jumlahKembali);
+            pstDetail.setString(5, kondisi);
+            pstDetail.setInt(6, dendaBarang);
+            pstDetail.executeUpdate();
 
-            // Sukses
-            int pilihan = JOptionPane.showConfirmDialog(
-                    null,
-                    "Pengembalian berhasil disimpan!\nTotal Denda: Rp " + totalDenda
-                    + "\n\nApakah Anda ingin mencetak nota pengembalian sekarang?",
-                    "Pengembalian Berhasil",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+            // Jika Rusak atau Hilang, simpan ke barang_bermasalah
+            if (kondisi.equalsIgnoreCase("Rusak") || kondisi.equalsIgnoreCase("Hilang")) {
+                String statusMasalah = kondisi.equalsIgnoreCase("Rusak") ? "Menunggu Pemeriksaan" : "Hilang";
 
-            if (pilihan == JOptionPane.YES_OPTION) {
-                tampilkanPreviewStrukPengembalian(idPengembalian);
+                String queryBarang = "SELECT nama_barang, harga_beli FROM barang WHERE id_barang = ?";
+                PreparedStatement pstBarang = con.prepareStatement(queryBarang);
+                pstBarang.setString(1, idBarang);
+                ResultSet rsBarang = pstBarang.executeQuery();
+
+                if (rsBarang.next()) {
+                    String namaBarang = rsBarang.getString("nama_barang");
+                    int hargaBeli = rsBarang.getInt("harga_beli");
+
+                    String sumberRusak = "Penyewa";
+
+                    // Cek apakah sudah ada berdasarkan id_barang, status, sumber_rusak, id_detail_kembali
+                    String cekExist = "SELECT stok FROM barang_bermasalah WHERE id_barang = ? AND status = ? AND id_detail_kembali = ? AND sumber_rusak = ?";
+                    PreparedStatement pstCek = con.prepareStatement(cekExist);
+                    pstCek.setString(1, idBarang);
+                    pstCek.setString(2, statusMasalah);
+                    pstCek.setString(3, idDetail);
+                    pstCek.setString(4, sumberRusak);
+                    ResultSet rsCek = pstCek.executeQuery();
+
+                    if (rsCek.next()) {
+                        // Update stok
+                        String updateBermasalah = "UPDATE barang_bermasalah SET stok = stok + ? WHERE id_barang = ? AND status = ? AND id_detail_kembali = ? AND sumber_rusak = ?";
+                        PreparedStatement pstUpdate = con.prepareStatement(updateBermasalah);
+                        pstUpdate.setInt(1, jumlahKembali);
+                        pstUpdate.setString(2, idBarang);
+                        pstUpdate.setString(3, statusMasalah);
+                        pstUpdate.setString(4, idDetail);
+                        pstUpdate.setString(5, sumberRusak);
+                        pstUpdate.executeUpdate();
+                    } else {
+                        // Insert baru
+                        String idBermasalah = generateID("BMS", "barang_bermasalah", "id_brg_bermasalah");
+                        String insertBermasalah = "INSERT INTO barang_bermasalah (id_brg_bermasalah, id_detail_kembali, id_barang, stok, harga_beli, status, sumber_rusak) VALUES (?, ?, ?, ?, ?, ?, ?)";
+                        PreparedStatement pstInsert = con.prepareStatement(insertBermasalah);
+                        pstInsert.setString(1, idBermasalah);
+                        pstInsert.setString(2, idDetail);
+                        pstInsert.setString(3, idBarang);
+                        pstInsert.setInt(4, jumlahKembali);
+                        pstInsert.setInt(5, hargaBeli);
+                        pstInsert.setString(6, statusMasalah);
+                        pstInsert.setString(7, sumberRusak);
+                        pstInsert.executeUpdate();
+                    }
+
+                    rsCek.close();
+                    pstCek.close();
+                }
+
+                rsBarang.close();
+                pstBarang.close();
             }
-
-            // Refresh halaman
-            page_main.removeAll();
-            page_main.add(page_pengembalian);
-            page_main.repaint();
-            page_main.revalidate();
-            tampilDataPenyewaan();
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "❌ Gagal menyimpan pengembalian:\n" + e.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
+
+        String sqlUpdate = "UPDATE penyewaan SET status = 'Sudah Kembali' WHERE id_sewa = ?";
+        PreparedStatement pstUpdate = con.prepareStatement(sqlUpdate);
+        pstUpdate.setString(1, idSewa);
+        pstUpdate.executeUpdate();
+
+        int pilihan = JOptionPane.showConfirmDialog(
+                null,
+                "Pengembalian berhasil disimpan!\nTotal Denda: Rp " + totalDenda
+                + "\n\nApakah Anda ingin mencetak nota pengembalian sekarang?",
+                "Pengembalian Berhasil",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        if (pilihan == JOptionPane.YES_OPTION) {
+            tampilkanPreviewStrukPengembalian(idPengembalian);
+        }
+
+        page_main.removeAll();
+        page_main.add(page_pengembalian);
+        page_main.repaint();
+        page_main.revalidate();
+        tampilDataPenyewaan();
+
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(null, "❌ Gagal menyimpan pengembalian:\n" + e.getMessage(), "Kesalahan", JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
+    }
+
     }//GEN-LAST:event_btn_simpanActionPerformed
 
     private void denda_kerusakanFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_denda_kerusakanFocusLost
@@ -1496,7 +1619,6 @@ public class MenuPengembalian extends javax.swing.JPanel {
     private javax.swing.JButton btn_retur;
     private javax.swing.JButton btn_riwayat;
     private javax.swing.JButton btn_search;
-    private javax.swing.JButton btn_search1;
     private javax.swing.JButton btn_search2;
     private javax.swing.JButton btn_simpan;
     private javax.swing.JPanel daftar_barang;
@@ -1544,6 +1666,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
     private javax.swing.JTextField txt_nama_penyewa;
     private javax.swing.JTextField txt_search;
     private javax.swing.JTextField txt_search1;
+    private javax.swing.JTextField txt_search2;
     private javax.swing.JTextField txt_status;
     // End of variables declaration//GEN-END:variables
 }
