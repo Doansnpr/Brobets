@@ -4,12 +4,15 @@
  */
 package backend;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.NumberFormat;
+import java.util.Locale;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
@@ -19,9 +22,7 @@ import javax.swing.SwingConstants;
  */
 public class MenuDashAdm extends javax.swing.JPanel {
 
-    /**
-     * Creates new form MenuDashAdm
-     */
+   
         public MenuDashAdm(String namaUser) {
         initComponents();
         label_username.setText(namaUser);
@@ -31,13 +32,14 @@ public class MenuDashAdm extends javax.swing.JPanel {
 
     }
       public void setUsername(String namaUser) {
-        label_username.setText(namaUser); // label_username harus sudah dibuat lewat GUI editor
+        label_username.setText(namaUser); 
     }
     
     public MenuDashAdm() {
-        initComponents();
-        label_username.setText(Login.Session.getUsername());
-    }
+    initComponents();
+    label_username.setText(Login.Session.getUsername());
+    configureDashboard(); 
+}
 
     
         private void configureDashboard() {
@@ -77,7 +79,6 @@ public class MenuDashAdm extends javax.swing.JPanel {
         jLabel17 = new javax.swing.JLabel();
         jLabel18 = new javax.swing.JLabel();
         label_username = new javax.swing.JLabel();
-        jLabel31 = new javax.swing.JLabel();
 
         setLayout(new java.awt.CardLayout());
 
@@ -122,7 +123,7 @@ public class MenuDashAdm extends javax.swing.JPanel {
 
         omset.setForeground(new java.awt.Color(255, 244, 232));
         omset.setName(""); // NOI18N
-        card_omset.add(omset, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, 70, 20));
+        card_omset.add(omset, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 40, 140, 20));
 
         jLabel6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Line 232.png"))); // NOI18N
         card_omset.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 70, 240, 10));
@@ -153,9 +154,6 @@ public class MenuDashAdm extends javax.swing.JPanel {
         label_username.setText("Username");
         page_dashadm.add(label_username, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
-        jLabel31.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Chart.png"))); // NOI18N
-        page_dashadm.add(jLabel31, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 403, 739, 242));
-
         add(page_dashadm, "card2");
     }// </editor-fold>//GEN-END:initComponents
     private void loadDataUser() throws SQLException {
@@ -168,25 +166,35 @@ public class MenuDashAdm extends javax.swing.JPanel {
         setLabelData(query, omset);
     }
     private void setLabelData(String query, JLabel label) throws SQLException {
-        String url = "jdbc:mysql://localhost:3306/brobets";
-        String user = "root";
-        String password = "";
+    String url = "jdbc:mysql://localhost:3306/brobets";
+    String userDb = "root";
+    String password = "";
 
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
+    try (Connection conn = DriverManager.getConnection(url, userDb, password);
+         PreparedStatement stmt = conn.prepareStatement(query);
+         ResultSet rs = stmt.executeQuery()) {
 
-            if (rs.next()) {
-                int jumlah = rs.getInt(1);
-                label.setText(String.valueOf(jumlah));
+        if (rs.next()) {
+            int jumlah = rs.getInt(1);
+
+            if (label == omset) {
+               
+                NumberFormat formatRupiah = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
+                String formatted = formatRupiah.format(jumlah).replace("Rp", "Rp ");
+                label.setText(formatted);
             } else {
-                label.setText("0");
+                label.setText(String.valueOf(jumlah));
             }
-             
-            label.setFont(new Font("Arial", Font.PLAIN, 20));
-            label.setHorizontalAlignment(SwingConstants.LEFT);
+
+        } else {
+            label.setText(label == omset ? "Rp 0" : "0");
         }
+
+        label.setForeground(Color.WHITE); 
+        label.setFont(new Font("Arial", Font.PLAIN, 20));
+        label.setHorizontalAlignment(SwingConstants.LEFT);
     }
+}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private custom.panel2_custom card_omset;
@@ -200,7 +208,6 @@ public class MenuDashAdm extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel8;

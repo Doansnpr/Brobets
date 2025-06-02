@@ -1,6 +1,8 @@
 package backend;
 
 import custom.panel_custom;
+import java.awt.Color;
+import javax.swing.JOptionPane;
 
 public class DashAdm extends javax.swing.JFrame {
 
@@ -49,6 +51,9 @@ public class DashAdm extends javax.swing.JFrame {
         btn_laporan = new custom.panel_custom();
         jLabel9 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
+        btn_keluar = new custom.panel_custom();
+        jLabel20 = new javax.swing.JLabel();
+        jLabel21 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
         jLabel16 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
@@ -160,6 +165,35 @@ public class DashAdm extends javax.swing.JFrame {
         jLabel10.setBounds(8, 5, 28, 29);
 
         sidebar2.add(btn_laporan, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 350, -1, -1));
+
+        btn_keluar.setBackground(new java.awt.Color(255, 244, 232));
+        btn_keluar.setRoundBottomLeft(10);
+        btn_keluar.setRoundBottomRight(10);
+        btn_keluar.setRoundTopLeft(10);
+        btn_keluar.setRoundTopRight(10);
+        btn_keluar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                btn_keluarMouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                btn_keluarMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                btn_keluarMouseExited(evt);
+            }
+        });
+        btn_keluar.setLayout(null);
+
+        jLabel20.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel20.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/sidebar/KELUAR (1).png"))); // NOI18N
+        btn_keluar.add(jLabel20);
+        jLabel20.setBounds(40, 10, 40, 10);
+
+        jLabel21.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/sidebar/Share (1).png"))); // NOI18N
+        btn_keluar.add(jLabel21);
+        jLabel21.setBounds(10, 0, 20, 30);
+
+        sidebar2.add(btn_keluar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 620, 90, 30));
 
         jLabel15.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashadm/LAPORAN PUTIH.png"))); // NOI18N
         sidebar2.add(jLabel15, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 310, 200, 30));
@@ -299,6 +333,35 @@ public class DashAdm extends javax.swing.JFrame {
        this.setLocation(x - xx, y - xy);
     }//GEN-LAST:event_formMouseDragged
 
+    private void btn_keluarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_keluarMouseClicked
+        // TODO add your handling code here:
+
+        int confirm = JOptionPane.showConfirmDialog(
+            this,
+            "Apakah Anda yakin ingin keluar?",
+            "Konfirmasi Keluar",
+            JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            // Tutup form saat ini
+            this.dispose();
+
+            // Buka form login
+            new Login().setVisible(true);
+        }
+    }//GEN-LAST:event_btn_keluarMouseClicked
+
+    private void btn_keluarMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_keluarMouseEntered
+        // TODO add your handling code here:
+        btn_keluar.setBackground(new Color(255, 200, 200));
+    }//GEN-LAST:event_btn_keluarMouseEntered
+
+    private void btn_keluarMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_keluarMouseExited
+        // TODO add your handling code here:
+        btn_keluar.setBackground(new Color(255, 244, 232));
+    }//GEN-LAST:event_btn_keluarMouseExited
+
    boolean panjang = false;
     /**
      * @param args the command line arguments
@@ -338,6 +401,7 @@ public class DashAdm extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private custom.panel_custom btn_dashadm;
+    private custom.panel_custom btn_keluar;
     private custom.panel_custom btn_laporan;
     private custom.panel_custom btn_user;
     private javax.swing.JPanel content2;
@@ -347,6 +411,8 @@ public class DashAdm extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel20;
+    private javax.swing.JLabel jLabel21;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;

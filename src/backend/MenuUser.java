@@ -14,6 +14,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import java.sql.ResultSet;
+
 /**
  *
  * @author HP
@@ -25,14 +26,13 @@ public class MenuUser extends javax.swing.JPanel {
      */
     public MenuUser() {
         initComponents();
-                label_username1.setText(Login.Session.getUsername());
-                label_username2.setText(Login.Session.getUsername());
-                label_username4.setText(Login.Session.getUsername());
+        label_username1.setText(Login.Session.getUsername());
+        label_username2.setText(Login.Session.getUsername());
+        label_username4.setText(Login.Session.getUsername());
 
 //        label_username3.setText(Login.Session.getUsername());
-
         txt_password.setText("Masukkan Password");
-        txt_password.setEchoChar((char) 0); 
+        txt_password.setEchoChar((char) 0);
 //        label_username.setText(Login.Session.getUsername());
 
         try {
@@ -40,7 +40,6 @@ public class MenuUser extends javax.swing.JPanel {
         } catch (Exception e) {
         }
     }
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -81,6 +80,7 @@ public class MenuUser extends javax.swing.JPanel {
         txt_telp = new javax.swing.JTextField();
         txt_email = new javax.swing.JTextField();
         txt_nama = new javax.swing.JTextField();
+        txt_rfid = new javax.swing.JTextField();
         jLabel13 = new javax.swing.JLabel();
         btn_simpan = new javax.swing.JButton();
         jLabel30 = new javax.swing.JLabel();
@@ -324,6 +324,7 @@ public class MenuUser extends javax.swing.JPanel {
             }
         });
         form_tambah.add(txt_nama, new org.netbeans.lib.awtextra.AbsoluteConstraints(173, 61, 430, 30));
+        form_tambah.add(txt_rfid, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 400, 250, -1));
 
         jLabel13.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/user/Form tambah user.png"))); // NOI18N
         form_tambah.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 10, -1, 460));
@@ -493,212 +494,219 @@ public class MenuUser extends javax.swing.JPanel {
     }//GEN-LAST:event_btn_tambahActionPerformed
 
     private void btn_hapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_hapusActionPerformed
-    // Mendapatkan baris yang dipilih dari jTable1
-    int PilihBaris = tb_user.getSelectedRow();
-    if (PilihBaris == -1) {
-        JOptionPane.showMessageDialog(this, "Pilih data yang ingin dihapus!", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    // Mendapatkan ID dari kolom pertama
-    DefaultTableModel model = (DefaultTableModel) tb_user.getModel();
-    String idUser = (String) model.getValueAt(PilihBaris, 0);
-
-    // Konfirmasi penghapusan
-    int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin menghapus data ini?", "Konfirmasi", javax.swing.JOptionPane.YES_NO_OPTION);
-    if (confirm != JOptionPane.YES_OPTION) {
-        return;
-    }
-
-    // Hapus data dari database
-    String delete = "UPDATE pengguna SET status = 'Nonaktif' WHERE id_pengguna = ?";
-
-    try (Connection con = DriverManager.getConnection(url, user, DBpassword);
-         PreparedStatement hapus = con.prepareStatement(delete)) {
-
-        hapus.setString(1, idUser);
-        int rowsAffected = hapus.executeUpdate();
-
-        if (rowsAffected > 0) {
-            // Hapus baris dari tabel
-            model.removeRow(PilihBaris);
-            JOptionPane.showMessageDialog(this, "Data berhasil dihapus.", "Sukses", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Gagal menghapus data.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        // Mendapatkan baris yang dipilih dari jTable1
+        int PilihBaris = tb_user.getSelectedRow();
+        if (PilihBaris == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih data yang ingin dihapus!", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
         }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat menghapus data: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-    }
+
+        // Mendapatkan ID dari kolom pertama
+        DefaultTableModel model = (DefaultTableModel) tb_user.getModel();
+        String idUser = (String) model.getValueAt(PilihBaris, 0);
+
+        // Konfirmasi penghapusan
+        int confirm = JOptionPane.showConfirmDialog(this, "Apakah Anda yakin ingin menghapus data ini?", "Konfirmasi", javax.swing.JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        // Hapus data dari database
+        String delete = "UPDATE pengguna SET status = 'Nonaktif' WHERE id_pengguna = ?";
+
+        try (Connection con = DriverManager.getConnection(url, user, DBpassword); PreparedStatement hapus = con.prepareStatement(delete)) {
+
+            hapus.setString(1, idUser);
+            int rowsAffected = hapus.executeUpdate();
+
+            if (rowsAffected > 0) {
+                // Hapus baris dari tabel
+                model.removeRow(PilihBaris);
+                JOptionPane.showMessageDialog(this, "Data berhasil dihapus.", "Sukses", javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Gagal menghapus data.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Terjadi kesalahan saat menghapus data: " + e.getMessage(), "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btn_hapusActionPerformed
 
     private void btn_ubahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_ubahActionPerformed
-    String nama, email, alamat, no_HP, username, password;
-        
-    int PilihBaris = tb_user.getSelectedRow();
-    if (PilihBaris == -1) {
-        JOptionPane.showMessageDialog(this, "Pilih data yang ingin diedit!", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
+        String nama, email, alamat, no_HP, username, password;
 
-    DefaultTableModel model = (DefaultTableModel) tb_user.getModel();
-    selectedIdUser = (String) model.getValueAt(PilihBaris, 0);  // Disimpan, tapi tidak diubah
-    nama = (String) model.getValueAt(PilihBaris, 1);
-    email = (String) model.getValueAt(PilihBaris, 2);
-    alamat = (String) model.getValueAt(PilihBaris, 3);
-    no_HP = (String) model.getValueAt(PilihBaris, 4);
-    username = (String) model.getValueAt(PilihBaris, 5);
-    password = (String) model.getValueAt(PilihBaris, 7);
+        int PilihBaris = tb_user.getSelectedRow();
+        if (PilihBaris == -1) {
+            JOptionPane.showMessageDialog(this, "Pilih data yang ingin diedit!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-    page_main.removeAll();
-    page_main.add(page_ubah);
-    page_main.repaint();
-    page_main.revalidate();
-    
-    txt_nama1.setText(nama);
-    txt_nama1.setForeground(Color.BLACK);
-    txt_email1.setText(email);
-    txt_email1.setForeground(Color.BLACK);
-    txt_alamat1.setText(alamat);
-    txt_alamat1.setForeground(Color.BLACK);
-    txt_telp1.setText(no_HP);
-    txt_telp1.setForeground(Color.BLACK);
-    txt_username1.setText(username);
-    txt_username1.setForeground(Color.BLACK);
-    txt_password1.setText(password);
-    txt_password1.setEchoChar('•');
-    txt_password1.setForeground(Color.BLACK);
+        DefaultTableModel model = (DefaultTableModel) tb_user.getModel();
+        selectedIdUser = (String) model.getValueAt(PilihBaris, 0);  // Disimpan, tapi tidak diubah
+        nama = (String) model.getValueAt(PilihBaris, 1);
+        email = (String) model.getValueAt(PilihBaris, 2);
+        alamat = (String) model.getValueAt(PilihBaris, 3);
+        no_HP = (String) model.getValueAt(PilihBaris, 4);
+        username = (String) model.getValueAt(PilihBaris, 5);
+        password = (String) model.getValueAt(PilihBaris, 7);
+
+        page_main.removeAll();
+        page_main.add(page_ubah);
+        page_main.repaint();
+        page_main.revalidate();
+
+        txt_nama1.setText(nama);
+        txt_nama1.setForeground(Color.BLACK);
+        txt_email1.setText(email);
+        txt_email1.setForeground(Color.BLACK);
+        txt_alamat1.setText(alamat);
+        txt_alamat1.setForeground(Color.BLACK);
+        txt_telp1.setText(no_HP);
+        txt_telp1.setForeground(Color.BLACK);
+        txt_username1.setText(username);
+        txt_username1.setForeground(Color.BLACK);
+        txt_password1.setText(password);
+        txt_password1.setEchoChar('•');
+        txt_password1.setForeground(Color.BLACK);
     }//GEN-LAST:event_btn_ubahActionPerformed
 
     private void btn_simpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_simpanActionPerformed
-    String nama, email, no_hp, alamat, username, password, role = null, save;
-    
-    String idUser = generateIdOtomatis();
-    nama = txt_nama.getText();
-    email = txt_email.getText();
-    no_hp = txt_telp.getText();
-    alamat = txt_alamat.getText();
-    username = txt_username.getText();
-    password = new String(txt_password.getPassword());
-    if (rbAdmin.isSelected()) {
-    role = "admin";
-    } else if (rbPegawai.isSelected()) {
-    role = "pegawai";
-    }
-        
-    if (
-        nama.isEmpty() || nama.equals("Masukkan Nama Lengkap") ||
-        email.isEmpty() || email.equals("Masukkan Email") ||
-        no_hp.isEmpty() || no_hp.equals("Masukkan Nomor Telepon") ||
-        alamat.isEmpty() || alamat.equals("Masukkan Alamat") ||
-        username.isEmpty() || username.equals("Masukkan Username") ||
-        password.isEmpty() || password.equals("Masukkan Password")
-    ) {
-        JOptionPane.showMessageDialog(this, "Semua field harus diisi!", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-    
-    save = "INSERT INTO pengguna (id_pengguna, nama_lengkap, email, alamat, no_hp, nama_pengguna, password, role) " +
-                   "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    
-    try {
-        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/brobets", "root", "");
-        String CekUsername = "SELECT * FROM pengguna WHERE nama_pengguna = ?"; // cek usesrname
-        PreparedStatement cekuser = con.prepareStatement(CekUsername);
-        cekuser.setString(1, username);
-        ResultSet rs = cekuser.executeQuery();
+        String nama, email, no_hp, alamat, username, password, role = null, rfid, save;
 
-        if (rs.next()) {
-            JOptionPane.showMessageDialog(this, "Username sudah digunakan, silakan pilih yang lain", "Error", JOptionPane.ERROR_MESSAGE);
-            return; // berhrnti nyimpen
+        String idUser = generateIdOtomatis();
+        nama = txt_nama.getText();
+        email = txt_email.getText();
+        no_hp = txt_telp.getText();
+        alamat = txt_alamat.getText();
+        username = txt_username.getText();
+        password = new String(txt_password.getPassword());
+        rfid = txt_rfid.getText(); // Ambil input RFID
+
+        if (rbAdmin.isSelected()) {
+            role = "admin";
+        } else if (rbPegawai.isSelected()) {
+            role = "pegawai";
         }
-        PreparedStatement simpan = con.prepareStatement(save);
-        simpan.setString(1, idUser);
-        simpan.setString(2, nama);
-        simpan.setString(3, email);
-        simpan.setString(4, alamat);
-        simpan.setString(5, no_hp);
-        simpan.setString(6, username);
-        simpan.setString(7, password);
-        simpan.setString(8, role);
-   
-        int result = simpan.executeUpdate();
-        
-        if (result > 0 ) {
-            JOptionPane.showMessageDialog(this, "Pengguna berhasil ditambahkan", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-            page_main.removeAll();
-            page_main.add(page_user);
-            page_main.repaint();
-            page_main.revalidate();
-            loadDataFromDatabase();
+
+        if (nama.isEmpty() || nama.equals("Masukkan Nama Lengkap")
+                || email.isEmpty() || email.equals("Masukkan Email")
+                || no_hp.isEmpty() || no_hp.equals("Masukkan Nomor Telepon")
+                || alamat.isEmpty() || alamat.equals("Masukkan Alamat")
+                || username.isEmpty() || username.equals("Masukkan Username")
+                || password.isEmpty() || password.equals("Masukkan Password")
+                || rfid.isEmpty() || rfid.equals("Tempelkan Kartu RFID") // Validasi RFID
+                ) {
+            JOptionPane.showMessageDialog(this, "Semua field harus diisi!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        save = "INSERT INTO pengguna (id_pengguna, nama_lengkap, email, alamat, no_hp, nama_pengguna, password, role, rfid) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try {
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/brobets", "root", "");
+
+            // Cek apakah username sudah dipakai
+            String CekUsername = "SELECT * FROM pengguna WHERE nama_pengguna = ?";
+            PreparedStatement cekuser = con.prepareStatement(CekUsername);
+            cekuser.setString(1, username);
+            ResultSet rs = cekuser.executeQuery();
+
+            if (rs.next()) {
+                JOptionPane.showMessageDialog(this, "Username sudah digunakan, silakan pilih yang lain", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Simpan data pengguna baru
+            PreparedStatement simpan = con.prepareStatement(save);
+            simpan.setString(1, idUser);
+            simpan.setString(2, nama);
+            simpan.setString(3, email);
+            simpan.setString(4, alamat);
+            simpan.setString(5, no_hp);
+            simpan.setString(6, username);
+            simpan.setString(7, password);
+            simpan.setString(8, role);
+            simpan.setString(9, rfid); // Tambahkan rfid
+
+            int result = simpan.executeUpdate();
+
+            if (result > 0) {
+                JOptionPane.showMessageDialog(this, "Pengguna berhasil ditambahkan", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                page_main.removeAll();
+                page_main.add(page_user);
+                page_main.repaint();
+                page_main.revalidate();
+                loadDataFromDatabase();
             } else {
                 JOptionPane.showMessageDialog(this, "Gagal menambahkan pengguna!", "Error", JOptionPane.ERROR_MESSAGE);
             }
+
             con.close();
-        
-        } catch (Exception e){
-            JOptionPane.showMessageDialog(this, "Database Error" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Database Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btn_simpanActionPerformed
 
     private void btn_updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_updateActionPerformed
-    String newNama, newEmail, newAlamat, newNo_HP, newUsername, newPassword, update;
-    
-    newNama = txt_nama1.getText().trim();
-    newEmail = txt_email1.getText().trim();
-    newAlamat = txt_alamat1.getText().trim();
-    newNo_HP = txt_telp1.getText().trim();
-    newUsername = txt_username1.getText().trim();
-    newPassword = new String(txt_password1.getPassword()).trim();
+        String newNama, newEmail, newAlamat, newNo_HP, newUsername, newPassword, update;
 
-    // Validasi input
-    if (newNama.isEmpty() || newEmail.isEmpty() || newAlamat.isEmpty() || 
-        newNo_HP.isEmpty() || newUsername.isEmpty() || newPassword.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Semua field harus diisi!", "Error", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
+        newNama = txt_nama1.getText().trim();
+        newEmail = txt_email1.getText().trim();
+        newAlamat = txt_alamat1.getText().trim();
+        newNo_HP = txt_telp1.getText().trim();
+        newUsername = txt_username1.getText().trim();
+        newPassword = new String(txt_password1.getPassword()).trim();
 
-    update = "UPDATE pengguna SET nama_lengkap = ?, email = ?, alamat = ?, no_hp = ?, nama_pengguna = ?, password = ? WHERE id_pengguna = ?";
-
-    try {
-        Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/brobets", "root", "");
-        String CekPengguna = "SELECT * FROM pengguna WHERE nama_pengguna = ? AND id_pengguna != ?";
-        PreparedStatement cekpengguna = con.prepareStatement(CekPengguna);
-        cekpengguna.setString(1, newUsername);
-        cekpengguna.setString(2, selectedIdUser);
-        ResultSet rs = cekpengguna.executeQuery();
-
-        if (rs.next()) {
-            JOptionPane.showMessageDialog(this, "Username sudah digunakan, silakan pilih yang lain", "Error", JOptionPane.ERROR_MESSAGE);
-            return; // hentikan proses simpan
+        // Validasi input
+        if (newNama.isEmpty() || newEmail.isEmpty() || newAlamat.isEmpty()
+                || newNo_HP.isEmpty() || newUsername.isEmpty() || newPassword.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Semua field harus diisi!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
-        PreparedStatement ubah = con.prepareStatement(update);
-        ubah.setString(1, newNama);
-        ubah.setString(2, newEmail);
-        ubah.setString(3, newAlamat);
-        ubah.setString(4, newNo_HP);
-        ubah.setString(5, newUsername);
-        ubah.setString(6, newPassword);
-        ubah.setString(7, selectedIdUser); // id hanya sebagai kunci WHERE
+        update = "UPDATE pengguna SET nama_lengkap = ?, email = ?, alamat = ?, no_hp = ?, nama_pengguna = ?, password = ? WHERE id_pengguna = ?";
 
-        int result = ubah.executeUpdate();
-        
-        if (result > 0) {
-            JOptionPane.showMessageDialog(this, "Data berhasil diperbarui.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
-            page_main.removeAll();
-            page_main.add(page_user);
-            page_main.repaint();
-            page_main.revalidate();
-            loadDataFromDatabase();
-        } else {
-            JOptionPane.showMessageDialog(this, "Gagal memperbarui data.", "Error", JOptionPane.ERROR_MESSAGE);
+        try {
+            Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/brobets", "root", "");
+            String CekPengguna = "SELECT * FROM pengguna WHERE nama_pengguna = ? AND id_pengguna != ?";
+            PreparedStatement cekpengguna = con.prepareStatement(CekPengguna);
+            cekpengguna.setString(1, newUsername);
+            cekpengguna.setString(2, selectedIdUser);
+            ResultSet rs = cekpengguna.executeQuery();
+
+            if (rs.next()) {
+                JOptionPane.showMessageDialog(this, "Username sudah digunakan, silakan pilih yang lain", "Error", JOptionPane.ERROR_MESSAGE);
+                return; // hentikan proses simpan
+            }
+
+            PreparedStatement ubah = con.prepareStatement(update);
+            ubah.setString(1, newNama);
+            ubah.setString(2, newEmail);
+            ubah.setString(3, newAlamat);
+            ubah.setString(4, newNo_HP);
+            ubah.setString(5, newUsername);
+            ubah.setString(6, newPassword);
+            ubah.setString(7, selectedIdUser); // id hanya sebagai kunci WHERE
+
+            int result = ubah.executeUpdate();
+
+            if (result > 0) {
+                JOptionPane.showMessageDialog(this, "Data berhasil diperbarui.", "Sukses", JOptionPane.INFORMATION_MESSAGE);
+                page_main.removeAll();
+                page_main.add(page_user);
+                page_main.repaint();
+                page_main.revalidate();
+                loadDataFromDatabase();
+            } else {
+                JOptionPane.showMessageDialog(this, "Gagal memperbarui data.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            con.close();
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Kesalahan: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-        con.close();
-
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Kesalahan: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-    }
     }//GEN-LAST:event_btn_updateActionPerformed
 
     private void txt_namaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txt_namaFocusGained
@@ -777,7 +785,8 @@ public class MenuUser extends javax.swing.JPanel {
             txt_password.setForeground(Color.BLACK);
             if (!btn_password.isSelected()) {
                 txt_password.setEchoChar('•');
-        }}
+            }
+        }
     }//GEN-LAST:event_txt_passwordFocusGained
 
     private void txt_passwordFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txt_passwordFocusLost
@@ -880,7 +889,8 @@ public class MenuUser extends javax.swing.JPanel {
             txt_password1.setForeground(Color.BLACK);
             if (!btn_password1.isSelected()) {
                 txt_password1.setEchoChar('•');
-        }}
+            }
+        }
     }//GEN-LAST:event_txt_password1FocusGained
 
     private void txt_password1FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_txt_password1FocusLost
@@ -942,11 +952,11 @@ public class MenuUser extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Gagal mencari data: " + e.getMessage());
         }
     }//GEN-LAST:event_btn_searchActionPerformed
-    
+
     String url = "jdbc:mysql://localhost:3306/brobets";
     String user = "root";
     String DBpassword = "";
-        
+
     public String generateIdOtomatis() {
         String idBaru = "UR001";
         try {
@@ -975,7 +985,7 @@ public class MenuUser extends javax.swing.JPanel {
 
         return idBaru;
     }
-    
+
     private void loadDataFromDatabase() throws SQLException {
         DefaultTableModel model = new DefaultTableModel() {
             @Override
@@ -994,8 +1004,7 @@ public class MenuUser extends javax.swing.JPanel {
 
         String query = "SELECT * FROM pengguna WHERE status = ?";
 
-        try (Connection con = DriverManager.getConnection(url, user, DBpassword);
-             PreparedStatement pstmt = con.prepareStatement(query)) {
+        try (Connection con = DriverManager.getConnection(url, user, DBpassword); PreparedStatement pstmt = con.prepareStatement(query)) {
 
             pstmt.setString(1, "Aktif"); // Set parameter status = 'Aktif'
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -1008,8 +1017,7 @@ public class MenuUser extends javax.swing.JPanel {
                         rs.getString("no_hp"),
                         rs.getString("nama_pengguna"),
                         rs.getString("role"),
-                        rs.getString("password"),
-                    };
+                        rs.getString("password"),};
                     model.addRow(row);
                 }
             }
@@ -1017,7 +1025,6 @@ public class MenuUser extends javax.swing.JPanel {
 
         tb_user.setModel(model);
     }
-
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1066,6 +1073,7 @@ public class MenuUser extends javax.swing.JPanel {
     private javax.swing.JTextField txt_nama1;
     private javax.swing.JPasswordField txt_password;
     private javax.swing.JPasswordField txt_password1;
+    private javax.swing.JTextField txt_rfid;
     private javax.swing.JTextField txt_search;
     private javax.swing.JTextField txt_telp;
     private javax.swing.JTextField txt_telp1;
@@ -1074,4 +1082,3 @@ public class MenuUser extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
     private String selectedIdUser;
 }
-

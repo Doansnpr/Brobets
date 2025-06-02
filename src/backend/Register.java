@@ -40,12 +40,12 @@ public class Register extends javax.swing.JFrame {
         txt_nama = new javax.swing.JTextField();
         txt_username = new javax.swing.JTextField();
         txt_email = new javax.swing.JTextField();
-        txt_telp = new javax.swing.JTextField();
         txt_password = new javax.swing.JPasswordField();
         jScrollPane1 = new javax.swing.JScrollPane();
         txt_alamat = new javax.swing.JTextArea();
         btn_register = new javax.swing.JButton();
         link_register = new javax.swing.JButton();
+        txt_telp = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -87,11 +87,6 @@ public class Register extends javax.swing.JFrame {
         txt_email.setBorder(null);
         panel_custom2.add(txt_email, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 311, 180, -1));
 
-        txt_telp.setEditable(false);
-        txt_telp.setBackground(new java.awt.Color(245, 245, 245));
-        txt_telp.setBorder(null);
-        panel_custom2.add(txt_telp, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 371, 180, -1));
-
         txt_password.setBackground(new java.awt.Color(245, 245, 245));
         txt_password.setBorder(null);
         panel_custom2.add(txt_password, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 341, 180, -1));
@@ -132,6 +127,9 @@ public class Register extends javax.swing.JFrame {
         });
         panel_custom2.add(link_register, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 504, -1, 20));
 
+        txt_telp.setBorder(null);
+        panel_custom2.add(txt_telp, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 370, 180, 20));
+
         jLabel2.setBackground(new java.awt.Color(252, 252, 252));
         jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/Form Register.png"))); // NOI18N
         panel_custom2.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 930, 650));
@@ -166,7 +164,8 @@ public class Register extends javax.swing.JFrame {
             return;
         }
 
-        String sqlCheck = "SELECT COUNT(*) AS count FROM pengguna WHERE username = ? AND role = ?";
+        // Cek apakah username dengan role yang sama sudah ada
+        String sqlCheck = "SELECT COUNT(*) AS count FROM pengguna WHERE nama_pengguna = ? AND role = ?";
         pst = con.prepareStatement(sqlCheck);
         pst.setString(1, txt_username.getText());
         pst.setString(2, txt_role.getText());
@@ -175,31 +174,32 @@ public class Register extends javax.swing.JFrame {
         if (rs.next() && rs.getInt("count") > 0) {
             JOptionPane.showMessageDialog(null, "Username telah digunakan!");
         } else {
-            String sqlID = "SELECT id_user FROM user ORDER BY id_user DESC LIMIT 1";
+            // Ambil ID terakhir dan buat ID baru
+            String sqlID = "SELECT id_pengguna FROM pengguna ORDER BY id_pengguna DESC LIMIT 1";
             pst = con.prepareStatement(sqlID);
             rs = pst.executeQuery();
 
             String newID = "UR001";
             if (rs.next()) {
-                String IDterakhir = rs.getString("id_user");
-                int angka = Integer.parseInt(IDterakhir.substring(1)) + 1;
+                String IDterakhir = rs.getString("id_pengguna");
+                String angkaStr = IDterakhir.replaceAll("[^0-9]", ""); // hanya ambil angka
+                int angka = Integer.parseInt(angkaStr) + 1;
                 newID = String.format("UR%03d", angka);
             }
 
             rs.close();
             pst.close();
 
-            String sql = "INSERT INTO pengguna (id_pengguna, nama, username, email, password, alamat, no_telp, role) "
+            // Query insert pengguna baru
+            String sql = "INSERT INTO pengguna (id_pengguna, nama_lengkap, nama_pengguna, email, password, alamat, no_hp, role) "
                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             pst = con.prepareStatement(sql);
-
-    //        String hashedPassword = BCrypt.hashpw(new String(txt_password.getPassword()), BCrypt.gensalt());
 
             pst.setString(1, newID);
             pst.setString(2, txt_nama.getText());
             pst.setString(3, txt_username.getText());
             pst.setString(4, txt_email.getText());
-            pst.setString(5, txt_password.getText()); // atau hashedPassword jika menggunakan enkripsi
+            pst.setString(5, txt_password.getText()); // Ganti dengan hashed password jika perlu
             pst.setString(6, txt_alamat.getText());
             pst.setString(7, txt_telp.getText());
             pst.setString(8, txt_role.getText());
@@ -211,6 +211,8 @@ public class Register extends javax.swing.JFrame {
         }
     } catch (SQLException e) {
         JOptionPane.showMessageDialog(null, e.getMessage());
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(null, "Format ID terakhir tidak valid. Harap periksa data di tabel pengguna.");
     } finally {
         try {
             if (rs != null) rs.close();
@@ -219,6 +221,7 @@ public class Register extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(null, ex.getMessage());
         }
     }
+
 
       
     }//GEN-LAST:event_btn_registerActionPerformed
