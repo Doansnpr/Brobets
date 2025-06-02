@@ -418,14 +418,16 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         form_tambah.setBackground(new java.awt.Color(255, 244, 232));
         form_tambah.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
+        txt_jumlahbarang.setBackground(new java.awt.Color(255, 244, 232));
         txt_jumlahbarang.setBorder(null);
         txt_jumlahbarang.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 txt_jumlahbarangActionPerformed(evt);
             }
         });
-        form_tambah.add(txt_jumlahbarang, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 310, 420, 30));
+        form_tambah.add(txt_jumlahbarang, new org.netbeans.lib.awtextra.AbsoluteConstraints(70, 308, 420, 30));
 
+        txt_harga.setBackground(new java.awt.Color(255, 244, 232));
         txt_harga.setBorder(null);
         txt_harga.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -442,22 +444,22 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         });
         form_tambah.add(txt_harga, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 240, 430, 30));
 
-        txt_kategori.setBackground(new java.awt.Color(248, 232, 215));
+        txt_kategori.setBackground(new java.awt.Color(255, 244, 232));
         txt_kategori.setBorder(null);
-        form_tambah.add(txt_kategori, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 180, 430, 30));
+        form_tambah.add(txt_kategori, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 176, 430, 30));
 
-        cmb_pilihbarang.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmb_pilihbarang.setBackground(new java.awt.Color(255, 244, 232));
         cmb_pilihbarang.setBorder(null);
         form_tambah.add(cmb_pilihbarang, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 110, 430, 30));
 
-        cmb_idpemasok.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cmb_idpemasok.setBackground(new java.awt.Color(255, 244, 232));
         cmb_idpemasok.setBorder(null);
         cmb_idpemasok.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cmb_idpemasokActionPerformed(evt);
             }
         });
-        form_tambah.add(cmb_idpemasok, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 370, 430, 30));
+        form_tambah.add(cmb_idpemasok, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 373, 430, 30));
 
         jLabel13.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/stokmasuk/Group 128.png"))); // NOI18N
         form_tambah.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 630, 490));

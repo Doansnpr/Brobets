@@ -38,11 +38,10 @@ public class Register extends javax.swing.JFrame {
         panel_custom2 = new custom.panel_custom();
         txt_role = new javax.swing.JTextField();
         txt_nama = new javax.swing.JTextField();
+        txt_alamat = new javax.swing.JTextField();
         txt_username = new javax.swing.JTextField();
         txt_email = new javax.swing.JTextField();
         txt_password = new javax.swing.JPasswordField();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        txt_alamat = new javax.swing.JTextArea();
         btn_register = new javax.swing.JButton();
         link_register = new javax.swing.JButton();
         txt_telp = new javax.swing.JTextField();
@@ -79,6 +78,10 @@ public class Register extends javax.swing.JFrame {
         txt_nama.setBorder(null);
         panel_custom2.add(txt_nama, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 251, 180, -1));
 
+        txt_alamat.setBackground(new java.awt.Color(245, 245, 245));
+        txt_alamat.setBorder(null);
+        panel_custom2.add(txt_alamat, new org.netbeans.lib.awtextra.AbsoluteConstraints(404, 406, 180, 20));
+
         txt_username.setBackground(new java.awt.Color(245, 245, 245));
         txt_username.setBorder(null);
         panel_custom2.add(txt_username, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 281, 180, -1));
@@ -90,15 +93,6 @@ public class Register extends javax.swing.JFrame {
         txt_password.setBackground(new java.awt.Color(245, 245, 245));
         txt_password.setBorder(null);
         panel_custom2.add(txt_password, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 341, 180, -1));
-
-        jScrollPane1.setBorder(null);
-
-        txt_alamat.setBackground(new java.awt.Color(245, 245, 245));
-        txt_alamat.setColumns(20);
-        txt_alamat.setRows(5);
-        jScrollPane1.setViewportView(txt_alamat);
-
-        panel_custom2.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 402, 180, 30));
 
         btn_register.setContentAreaFilled(false);
 
@@ -127,6 +121,7 @@ public class Register extends javax.swing.JFrame {
         });
         panel_custom2.add(link_register, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 504, -1, 20));
 
+        txt_telp.setBackground(new java.awt.Color(245, 245, 245));
         txt_telp.setBorder(null);
         panel_custom2.add(txt_telp, new org.netbeans.lib.awtextra.AbsoluteConstraints(400, 370, 180, 20));
 
@@ -269,10 +264,9 @@ public class Register extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btn_register;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton link_register;
     private custom.panel_custom panel_custom2;
-    private javax.swing.JTextArea txt_alamat;
+    private javax.swing.JTextField txt_alamat;
     private javax.swing.JTextField txt_email;
     private javax.swing.JTextField txt_nama;
     private javax.swing.JPasswordField txt_password;
