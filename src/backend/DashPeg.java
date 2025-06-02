@@ -143,13 +143,8 @@ public class DashPeg extends javax.swing.JFrame {
 
         jLabel17.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel17.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/sidebar/PEMASOK.png"))); // NOI18N
-        jLabel17.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jLabel17MouseClicked(evt);
-            }
-        });
         btn_pemasok.add(jLabel17);
-        jLabel17.setBounds(41, 10, 100, 20);
+        jLabel17.setBounds(41, 10, 80, 20);
 
         jLabel18.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/sidebar/Shopping_Cart_01.png"))); // NOI18N
         btn_pemasok.add(jLabel18);
@@ -293,11 +288,6 @@ public class DashPeg extends javax.swing.JFrame {
 
         jLabel13.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jLabel13.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/sidebar/STOK MASUK.png"))); // NOI18N
-        jLabel13.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jLabel13MouseClicked(evt);
-            }
-        });
         btn_stok.add(jLabel13);
         jLabel13.setBounds(41, 10, 100, 20);
 
@@ -522,10 +512,6 @@ public class DashPeg extends javax.swing.JFrame {
         page.revalidate();
     }//GEN-LAST:event_btn_pelangganMouseClicked
 
-    private void jLabel13MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel13MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jLabel13MouseClicked
-
     private void btn_stokMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_stokMouseClicked
          if (activePanel != null && activePanel != btn_stok) {
             activePanel.setDynamicSize(180, activePanel.getHeight());
@@ -540,10 +526,6 @@ public class DashPeg extends javax.swing.JFrame {
         page.revalidate();
         
     }//GEN-LAST:event_btn_stokMouseClicked
-
-    private void jLabel17MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel17MouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jLabel17MouseClicked
 
     private void btn_pemasokMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_pemasokMouseClicked
        if (activePanel != null && activePanel != btn_pemasok) {
