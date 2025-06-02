@@ -246,17 +246,17 @@ public class DashAdm extends javax.swing.JFrame {
     }//GEN-LAST:event_btn_userMouseExited
 
     private void btn_laporanMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_laporanMouseClicked
-//        if (activePanel != null && activePanel != btn_laporan) {
-//            activePanel.setDynamicSize(180, activePanel.getHeight());
-//        }
-//
-//        activePanel = (panel_custom) btn_laporan;
-//        activePanel.setDynamicSize(200, btn_laporan.getHeight());
-//
-//        page2.removeAll();
-//        page2.add(new MenuPenyewaan());
-//        page2.repaint();
-//        page2.revalidate();
+        if (activePanel != null && activePanel != btn_laporan) {
+            activePanel.setDynamicSize(180, activePanel.getHeight());
+        }
+
+        activePanel = (panel_custom) btn_laporan;
+        activePanel.setDynamicSize(200, btn_laporan.getHeight());
+
+        page2.removeAll();
+        page2.add(new MenuLaporan());
+        page2.repaint();
+        page2.revalidate();
     }//GEN-LAST:event_btn_laporanMouseClicked
 
     private void btn_laporanMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btn_laporanMouseEntered

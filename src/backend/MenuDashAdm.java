@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
- */
+
 package backend;
 
 import java.awt.Font;
@@ -13,10 +10,7 @@ import java.sql.SQLException;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
-/**
- *
- * @author HP
- */
+
 public class MenuDashAdm extends javax.swing.JPanel {
 
     /**
