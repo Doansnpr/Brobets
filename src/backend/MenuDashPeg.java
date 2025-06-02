@@ -1,28 +1,50 @@
 
 package backend;
 
-import backend.Login.Session;
+import java.awt.Color;
+import java.awt.Font;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.NumberFormat;
+import java.util.Locale;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 
 public class MenuDashPeg extends javax.swing.JPanel {
 
-      public MenuDashPeg(String namaUser) {
+    public MenuDashPeg(String namaUser) {
         initComponents();
-        label_username.setText("Halo, " + namaUser);
-
-
         label_username.setText(namaUser);
-        
+        configureDashboard();
+        label_username.setText("Halo, " + namaUser);
     }
-      public void setUsername(String namaUser) {
-        label_username.setText(namaUser); // label_username harus sudah dibuat lewat GUI editor
+
+    public void setUsername(String namaUser) {
+        label_username.setText(namaUser); 
     }
     
     public MenuDashPeg() {
         initComponents();
-        label_username.setText(Session.getUsername());
+        label_username.setText(Login.Session.getUsername());
+        configureDashboard(); 
     }
     
+    private void configureDashboard() {
+        try {
+            loadJumlahPelanggan();
+            loadJumlahStokItem();
+            loadJumlahPenyewaan();
+            loadJumlahPengembalian();
+            loadJumlahStokMasuk();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     
     @SuppressWarnings("unchecked")
@@ -31,30 +53,35 @@ public class MenuDashPeg extends javax.swing.JPanel {
 
         page_dashpeg = new javax.swing.JPanel();
         card_pelanggan = new custom.panel2_custom();
+        pelanggan = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         card_items = new custom.panel2_custom();
+        stok = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         jLabel10 = new javax.swing.JLabel();
         jLabel11 = new javax.swing.JLabel();
         jLabel12 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         card_penyewaan = new custom.panel2_custom();
+        penyewaan = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         jLabel14 = new javax.swing.JLabel();
         jLabel15 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         card_pengembalian = new custom.panel2_custom();
+        pengembalian = new javax.swing.JLabel();
         jLabel25 = new javax.swing.JLabel();
         jLabel26 = new javax.swing.JLabel();
         jLabel27 = new javax.swing.JLabel();
         jLabel28 = new javax.swing.JLabel();
         jLabel29 = new javax.swing.JLabel();
         card_stok = new custom.panel2_custom();
+        stok_masuk = new javax.swing.JLabel();
         jLabel20 = new javax.swing.JLabel();
         jLabel21 = new javax.swing.JLabel();
         jLabel22 = new javax.swing.JLabel();
@@ -64,7 +91,6 @@ public class MenuDashPeg extends javax.swing.JPanel {
         jLabel17 = new javax.swing.JLabel();
         jLabel18 = new javax.swing.JLabel();
         label_username = new javax.swing.JLabel();
-        jLabel31 = new javax.swing.JLabel();
 
         setLayout(new java.awt.CardLayout());
 
@@ -77,6 +103,7 @@ public class MenuDashPeg extends javax.swing.JPanel {
         card_pelanggan.setRoundTopLeft(10);
         card_pelanggan.setRoundTopRight(10);
         card_pelanggan.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        card_pelanggan.add(pelanggan, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, 130, 30));
 
         jLabel5.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Line 232.png"))); // NOI18N
         card_pelanggan.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 70, 240, 10));
@@ -101,6 +128,7 @@ public class MenuDashPeg extends javax.swing.JPanel {
         card_items.setRoundTopLeft(10);
         card_items.setRoundTopRight(10);
         card_items.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        card_items.add(stok, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, 130, 30));
 
         jLabel6.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Line 232.png"))); // NOI18N
         card_items.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 70, 240, 10));
@@ -125,6 +153,7 @@ public class MenuDashPeg extends javax.swing.JPanel {
         card_penyewaan.setRoundTopLeft(10);
         card_penyewaan.setRoundTopRight(10);
         card_penyewaan.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        card_penyewaan.add(penyewaan, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, 130, 30));
 
         jLabel7.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Line 232.png"))); // NOI18N
         card_penyewaan.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 70, 240, 10));
@@ -149,6 +178,7 @@ public class MenuDashPeg extends javax.swing.JPanel {
         card_pengembalian.setRoundTopLeft(10);
         card_pengembalian.setRoundTopRight(10);
         card_pengembalian.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        card_pengembalian.add(pengembalian, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, 130, 30));
 
         jLabel25.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Line 232.png"))); // NOI18N
         card_pengembalian.add(jLabel25, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 70, 240, 10));
@@ -173,6 +203,7 @@ public class MenuDashPeg extends javax.swing.JPanel {
         card_stok.setRoundTopLeft(10);
         card_stok.setRoundTopRight(10);
         card_stok.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        card_stok.add(stok_masuk, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, 130, 30));
 
         jLabel20.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Line 232.png"))); // NOI18N
         card_stok.add(jLabel20, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 70, 240, 10));
@@ -203,13 +234,58 @@ public class MenuDashPeg extends javax.swing.JPanel {
         label_username.setText("Username");
         page_dashpeg.add(label_username, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
-        jLabel31.setIcon(new javax.swing.ImageIcon(getClass().getResource("/assets/dashpeg/Chart.png"))); // NOI18N
-        page_dashpeg.add(jLabel31, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 403, 739, 242));
-
         add(page_dashpeg, "card2");
     }// </editor-fold>//GEN-END:initComponents
 
+private void loadJumlahPelanggan() throws SQLException {
+        String query = "SELECT COUNT(*) AS jumlah_pelanggan FROM pelanggan WHERE status = 'Aktif'";
+        setLabelData(query, pelanggan);
+    }
+    
+    private void loadJumlahStokItem() throws SQLException {
+        String query = "SELECT SUM(stok) AS total_stok FROM barang";
+        setLabelData(query, stok);
+    }
+    
+    private void loadJumlahPenyewaan() throws SQLException {
+        String query = "SELECT COUNT(*) AS jumlah_penyewaan FROM penyewaan";
+        setLabelData(query, penyewaan);
+    }
+    
+    private void loadJumlahPengembalian() throws SQLException {
+        String query = "SELECT COUNT(*) AS jumlah_pengembalian FROM pengembalian";
+        setLabelData(query, pengembalian);
+    }
+    
+    private void loadJumlahStokMasuk() throws SQLException {
+        String query = "SELECT COUNT(*) AS jumlah_stok_masuk FROM stok_masuk";
+        setLabelData(query, stok_masuk);
+    }
+    
+    private void setLabelData(String query, JLabel label) throws SQLException {
+        String url = "jdbc:mysql://localhost:3306/brobets";
+        String userDb = "root";
+        String password = "";
 
+        try (Connection conn = DriverManager.getConnection(url, userDb, password);
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                int jumlah = rs.getInt(1);
+                label.setText(String.valueOf(jumlah));
+            } else {
+                label.setText("0");
+            }
+
+            label.setForeground(Color.WHITE); 
+            label.setFont(new Font("Arial", Font.PLAIN, 20));
+            label.setHorizontalAlignment(SwingConstants.LEFT);
+        }
+    }
+    
+    
+ 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private custom.panel2_custom card_items;
     private custom.panel2_custom card_pelanggan;
@@ -238,7 +314,6 @@ public class MenuDashPeg extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel28;
     private javax.swing.JLabel jLabel29;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel31;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
@@ -247,5 +322,10 @@ public class MenuDashPeg extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel label_username;
     private javax.swing.JPanel page_dashpeg;
+    private javax.swing.JLabel pelanggan;
+    private javax.swing.JLabel pengembalian;
+    private javax.swing.JLabel penyewaan;
+    private javax.swing.JLabel stok;
+    private javax.swing.JLabel stok_masuk;
     // End of variables declaration//GEN-END:variables
 }
