@@ -13,25 +13,62 @@ import java.util.Locale;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.general.DefaultPieDataset;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 
 public class MenuDashPeg extends javax.swing.JPanel {
-
-    public MenuDashPeg(String namaUser) {
+    
+    Connection con;
+    PreparedStatement pst;
+    ResultSet rs;
+    
+    public MenuDashPeg() {
         initComponents();
-        label_username.setText(namaUser);
-        configureDashboard();
-        label_username.setText("Halo, " + namaUser);
-    }
+        Koneksi DB = new Koneksi();
+        DB.config();
+        con = DB.con;
+        
+        comboGrafik.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            switch (comboGrafik.getSelectedItem().toString()) {
+                case "Pendapatan Bulanan" -> tampilkanGrafikPendapatanBulanan();
+                case "Pendapatan Tahunan" -> tampilkanGrafikPendapatanTahunan();
+                case "Total Denda" -> tampilkanGrafikDenda();
+                case "Barang Bermasalah" -> tampilkanGrafikBarangBermasalah();
+            }
+        }
+    });
 
+        
+        Color backgroundWarna = new Color(255, 244, 232);
+        panelGrafik.setBackground(backgroundWarna);
+        panelGrafik.setOpaque(true);
+        
+        label_username.setText(Login.Session.getUsername());
+        configureDashboard(); 
+        tampilkanGrafikPendapatanBulanan();
+    }
+    
     public void setUsername(String namaUser) {
         label_username.setText(namaUser); 
     }
     
-    public MenuDashPeg() {
-        initComponents();
-        label_username.setText(Login.Session.getUsername());
-        configureDashboard(); 
-    }
     
     private void configureDashboard() {
         try {
@@ -44,6 +81,158 @@ public class MenuDashPeg extends javax.swing.JPanel {
             e.printStackTrace();
         }
     }
+    
+    private void tampilkanGrafikDariQuery(String sql, DefaultCategoryDataset dataset, String judul, String labelX, String labelY) {
+        try {
+            pst = con.prepareStatement(sql);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String kategori = rs.getString(1);
+                int nilai = rs.getInt(2);
+                dataset.addValue(nilai, judul, kategori);
+            }
+
+            JFreeChart chart = ChartFactory.createLineChart(judul, labelX, labelY, dataset);
+            chart.setBackgroundPaint(new Color(0, 0, 0, 0));
+            CategoryPlot plot = chart.getCategoryPlot();
+            plot.setBackgroundPaint(new Color(0, 0, 0, 0));
+            plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+
+            LineAndShapeRenderer renderer = new LineAndShapeRenderer();
+            renderer.setSeriesPaint(0, new Color(52, 152, 219));
+            renderer.setSeriesStroke(0, new BasicStroke(2.5f));
+            plot.setRenderer(renderer);
+
+            ChartPanel chartPanel = new ChartPanel(chart);
+            chartPanel.setOpaque(false);
+            chartPanel.setBackground(new Color(0, 0, 0, 0));
+            chartPanel.setPreferredSize(panelGrafik.getSize());
+
+            panelGrafik.removeAll();
+            panelGrafik.setLayout(new BorderLayout());
+            panelGrafik.add(chartPanel, BorderLayout.CENTER);
+            panelGrafik.revalidate();
+            panelGrafik.repaint();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pst != null) pst.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+  
+    private void tampilkanGrafikPendapatanBulanan() {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        String sql = """
+            SELECT 
+                DATE_FORMAT(tgl, '%b') AS bulan,
+                SUM(total_bayar) AS pendapatan
+            FROM (
+                SELECT tgl_sewa AS tgl, bayar AS total_bayar FROM penyewaan
+                UNION ALL
+                SELECT tgl_kembali AS tgl, bayar AS total_bayar FROM pengembalian
+            ) AS gabungan
+            GROUP BY bulan
+            ORDER BY STR_TO_DATE(bulan, '%b')
+        """;
+
+        try {
+            pst = con.prepareStatement(sql);
+            rs = pst.executeQuery();
+            while (rs.next()) {
+                String bulan = rs.getString("bulan");
+                int pendapatan = rs.getInt("pendapatan");
+                dataset.addValue(pendapatan, "Pendapatan", bulan);
+            }
+
+            JFreeChart chart = ChartFactory.createLineChart(
+                "Grafik Pendapatan Bulanan",
+                "Bulan",
+                "Pendapatan (Rp)",
+                dataset);
+
+            chart.setBackgroundPaint(new Color(0, 0, 0, 0));
+            CategoryPlot plot = chart.getCategoryPlot();
+            plot.setBackgroundPaint(new Color(0, 0, 0, 0));
+            plot.setRangeGridlinePaint(Color.LIGHT_GRAY);
+
+            LineAndShapeRenderer renderer = new LineAndShapeRenderer();
+            renderer.setSeriesPaint(0, new Color(52, 152, 219)); // biru modern
+            renderer.setSeriesStroke(0, new BasicStroke(2.5f));
+            plot.setRenderer(renderer);
+
+            ChartPanel chartPanel = new ChartPanel(chart);
+            chartPanel.setOpaque(false);
+            chartPanel.setBackground(new Color(0, 0, 0, 0));
+            chartPanel.setPreferredSize(panelGrafik.getSize());
+
+            panelGrafik.removeAll();
+            panelGrafik.setLayout(new BorderLayout());
+            panelGrafik.add(chartPanel, BorderLayout.CENTER);
+            panelGrafik.revalidate();
+            panelGrafik.repaint();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Gagal memuat grafik bulanan: " + e.getMessage());
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pst != null) pst.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void tampilkanGrafikPendapatanTahunan() {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        String sql = """
+            SELECT 
+                YEAR(tgl) AS tahun,
+                SUM(total_bayar) AS pendapatan
+            FROM (
+                SELECT tgl_sewa AS tgl, bayar AS total_bayar FROM penyewaan
+                UNION ALL
+                SELECT tgl_kembali AS tgl, bayar AS total_bayar FROM pengembalian
+            ) AS gabungan
+            GROUP BY tahun
+            ORDER BY tahun
+        """;
+
+        tampilkanGrafikDariQuery(sql, dataset, "Pendapatan Tahunan", "Tahun", "Pendapatan (Rp)");
+    }
+    
+    private void tampilkanGrafikDenda() {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    String sql = """
+        SELECT 
+            DATE_FORMAT(tgl_kembali, '%b') AS bulan,
+            SUM(total_denda) AS total_denda
+        FROM pengembalian
+        GROUP BY bulan
+        ORDER BY STR_TO_DATE(bulan, '%b')
+    """;
+
+    tampilkanGrafikDariQuery(sql, dataset, "Total Denda per Bulan", "Bulan", "Denda (Rp)");
+}
+
+    private void tampilkanGrafikBarangBermasalah() {
+    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    String sql = """
+        SELECT kondisi, COUNT(*) AS jumlah
+        FROM detail_pengembalian
+        WHERE kondisi IN ('Rusak', 'Hilang')
+        GROUP BY kondisi
+    """;
+
+    tampilkanGrafikDariQuery(sql, dataset, "Barang Bermasalah", "Kondisi", "Jumlah Barang");
+}
 
 
     
@@ -91,6 +280,8 @@ public class MenuDashPeg extends javax.swing.JPanel {
         jLabel17 = new javax.swing.JLabel();
         jLabel18 = new javax.swing.JLabel();
         label_username = new javax.swing.JLabel();
+        panelGrafik = new javax.swing.JPanel();
+        comboGrafik = new javax.swing.JComboBox<>();
 
         setLayout(new java.awt.CardLayout());
 
@@ -234,6 +425,12 @@ public class MenuDashPeg extends javax.swing.JPanel {
         label_username.setText("Username");
         page_dashpeg.add(label_username, new org.netbeans.lib.awtextra.AbsoluteConstraints(660, 30, -1, 20));
 
+        panelGrafik.setBackground(new java.awt.Color(255, 244, 232));
+        page_dashpeg.add(panelGrafik, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 400, 630, 240));
+
+        comboGrafik.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Pendapatan Bulanan", "Pendapatan Tahunan", "Total Denda", "Barang Bermasalah" }));
+        page_dashpeg.add(comboGrafik, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 352, 160, 30));
+
         add(page_dashpeg, "card2");
     }// </editor-fold>//GEN-END:initComponents
 
@@ -292,6 +489,7 @@ private void loadJumlahPelanggan() throws SQLException {
     private custom.panel2_custom card_pengembalian;
     private custom.panel2_custom card_penyewaan;
     private custom.panel2_custom card_stok;
+    private javax.swing.JComboBox<String> comboGrafik;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -322,6 +520,7 @@ private void loadJumlahPelanggan() throws SQLException {
     private javax.swing.JLabel jLabel9;
     private javax.swing.JLabel label_username;
     private javax.swing.JPanel page_dashpeg;
+    private javax.swing.JPanel panelGrafik;
     private javax.swing.JLabel pelanggan;
     private javax.swing.JLabel pengembalian;
     private javax.swing.JLabel penyewaan;

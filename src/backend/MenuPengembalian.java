@@ -254,9 +254,194 @@ public class MenuPengembalian extends javax.swing.JPanel {
             return 0;
         }
     }
+    
+    public void tampilkanPreviewStrukPengembalian(String idKembali) {
+    try {
+        // Query utama untuk ambil data pengembalian & pelanggan
+        String sql = "SELECT p.id_kembali, p.id_sewa, p.tgl_kembali, p.status, p.denda_keterlambatan, p.total_denda, " +
+                     "p.bayar, p.kembalian, pg.nama_lengkap, pg.no_hp, s.tgl_sewa, s.jaminan " +
+                     "FROM pengembalian p " +
+                     "JOIN penyewaan s ON p.id_sewa = s.id_sewa " +
+                     "JOIN pengguna pg ON s.id_pengguna = pg.id_pengguna " +
+                     "WHERE p.id_kembali = ?";
+        PreparedStatement ps = con.prepareStatement(sql);
+        ps.setString(1, idKembali);
+        ResultSet rs = ps.executeQuery();
 
-    private void tampilkanPreviewStruk(String isiStruk, String ucapan) {
-        JFrame previewFrame = new JFrame("Preview Struk Pengembalian");
+        if (!rs.next()) {
+            JOptionPane.showMessageDialog(null, "Data pengembalian tidak ditemukan.");
+            return;
+        }
+
+        // Ambil data dari query
+        String idSewa = rs.getString("id_sewa");
+        String tglPinjam = rs.getString("tgl_sewa");
+        String tglKembali = rs.getString("tgl_kembali");
+        String status = rs.getString("status");
+        String jaminan = rs.getString("jaminan");
+        String nama = rs.getString("nama_lengkap");
+        String noHp = rs.getString("no_hp");
+        int bayar = rs.getInt("bayar");
+        int kembalian = rs.getInt("kembalian");
+
+        // Info pelanggan dan transaksi
+        StringBuilder isiStruk = new StringBuilder();
+        isiStruk.append("===========================================\n");
+        isiStruk.append("ID Pengembalian : ").append(idKembali).append("\n");
+        isiStruk.append("ID Penyewaan    : ").append(idSewa).append("\n");
+        isiStruk.append("Nama            : ").append(nama).append("\n");
+        isiStruk.append("No HP           : ").append(noHp).append("\n");
+        isiStruk.append("Tgl Pinjam      : ").append(tglPinjam).append("\n");
+        isiStruk.append("Tgl Kembali     : ").append(tglKembali).append("\n");
+        isiStruk.append("Status          : ").append(status).append("\n");
+        isiStruk.append("Jaminan         : ").append(jaminan).append("\n");
+        isiStruk.append("-------------------------------------------\n");
+        isiStruk.append("BARANG KEMBALI:\n");
+        isiStruk.append(String.format("%-13s %3s %-6s %10s\n", "Nama", "Qty", "Kondisi", "Denda"));
+        isiStruk.append("===========================================\n");
+
+        // Ambil detail barang
+        String sqlDetail = "SELECT b.nama_barang, dp.kondisi, SUM(dp.jumlah) AS jumlah, SUM(dp.denda_barang) AS denda " +
+                           "FROM detail_pengembalian dp " +
+                           "JOIN barang b ON dp.id_barang = b.id_barang " +
+                           "WHERE dp.id_kembali = ? " +
+                           "GROUP BY b.nama_barang, dp.kondisi";
+        PreparedStatement psDetail = con.prepareStatement(sqlDetail);
+        psDetail.setString(1, idKembali);
+        ResultSet rsDetail = psDetail.executeQuery();
+
+        int totalDenda = 0;
+        while (rsDetail.next()) {
+            String namaBarang = rsDetail.getString("nama_barang");
+            int qty = rsDetail.getInt("jumlah");
+            String kondisi = rsDetail.getString("kondisi");
+            int denda = rsDetail.getInt("denda");
+            totalDenda += denda;
+
+            String namaPendek = namaBarang.length() > 13 ? namaBarang.substring(0, 13) : namaBarang;
+            isiStruk.append(String.format("%-13s %3d %-6s %10s\n",
+                namaPendek, qty,
+                kondisi.length() > 6 ? kondisi.substring(0, 6) : kondisi,
+                String.format("Rp %,d", denda)
+            ));
+        }
+
+        isiStruk.append("-------------------------------------------\n");
+        isiStruk.append(String.format("%-15s : Rp %,d\n", "Total Denda", totalDenda));
+        isiStruk.append(String.format("%-15s : Rp %,d\n", "Bayar", bayar));
+        isiStruk.append(String.format("%-15s : Rp %,d\n", "Kembalian", kembalian));
+        isiStruk.append("Kasir           : ").append(Login.Session.getUsername()).append("\n");
+        isiStruk.append("===========================================\n");
+
+        // Ucapan
+        String ucapan = "TERIMA KASIH TELAH MENGEMBALIKAN!";
+
+        // Tampilkan preview
+        tampilkanPreviewStruk(isiStruk.toString(), ucapan);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(null, "Gagal menampilkan preview nota pengembalian: " + e.getMessage());
+    }
+}
+
+    private void cetakStruk(String isiStruk, String ucapan) {
+        try {
+            BufferedImage logo = ImageIO.read(getClass().getResource("/assets/logo (2).png"));
+            String[] headerLines = {
+                "Jl. Gajah Mada Gg. Buntu No. 2",
+                "(Barat Bank Danamon) Jember-Jawa Timur",
+                "WA Only (No Call/SMS) 0821 3191 2829",
+                "IG : brobet_jbr | Kode Pos. 68131",
+                ""
+            };
+
+            PrinterJob job = PrinterJob.getPrinterJob();
+            PageFormat pf = job.defaultPage();
+            Paper paper = pf.getPaper();
+
+            double width = 72 * 2.83;
+            double height = 297 * 2.83;
+            double margin = 5;
+
+            paper.setSize(width, height);
+            paper.setImageableArea(margin, margin, width - 2 * margin, height - 2 * margin);
+            pf.setPaper(paper);
+            pf.setOrientation(PageFormat.PORTRAIT);
+
+            Printable printable = (graphics, pageFormat, pageIndex) -> {
+                if (pageIndex > 0) return Printable.NO_SUCH_PAGE;
+
+                Graphics2D g2d = (Graphics2D) graphics;
+                g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+                g2d.setFont(new Font("Monospaced", Font.PLAIN, 10));
+                FontMetrics fm = g2d.getFontMetrics();
+
+                int y = 0;
+                int pageWidth = (int) pageFormat.getImageableWidth();
+
+                // Logo
+                int logoWidth = 80, logoHeight = 80;
+                int logoX = (pageWidth - logoWidth) / 2;
+                g2d.drawImage(logo, logoX, y, logoWidth, logoHeight, null);
+                y += logoHeight + 5;
+
+                // Header
+                for (String line : headerLines) {
+                    int lineWidth = fm.stringWidth(line);
+                    g2d.drawString(line, (pageWidth - lineWidth) / 2, y);
+                    y += fm.getHeight();
+                }
+
+                // Isi Struk
+                for (String line : isiStruk.split("\n")) {
+                    y = drawWrappedLine(g2d, line, 0, y, pageWidth, fm);
+                }
+
+                // Ucapan (centered)
+                y += fm.getHeight();
+                int ucapanWidth = fm.stringWidth(ucapan);
+                g2d.drawString(ucapan, (pageWidth - ucapanWidth) / 2, y);
+
+                return Printable.PAGE_EXISTS;
+            };
+
+            job.setPrintable(printable, pf);
+
+            if (job.printDialog()) {
+                job.print();
+                JOptionPane.showMessageDialog(null, "Nota berhasil dicetak!");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Gagal mencetak: " + e.getMessage());
+        }
+    }
+
+    private int drawWrappedLine(Graphics2D g2d, String text, int x, int y, int maxWidth, FontMetrics fm) {
+        String[] words = text.split(" ");
+        StringBuilder lineBuilder = new StringBuilder();
+
+        for (String word : words) {
+            if (fm.stringWidth(lineBuilder + word + " ") > maxWidth) {
+                g2d.drawString(lineBuilder.toString(), x, y);
+                y += fm.getHeight();
+                lineBuilder = new StringBuilder();
+            }
+            lineBuilder.append(word).append(" ");
+        }
+
+        if (!lineBuilder.toString().isEmpty()) {
+            g2d.drawString(lineBuilder.toString(), x, y);
+            y += fm.getHeight();
+        }
+
+        return y;
+    }
+
+    public void tampilkanPreviewStruk(String isiStruk, String ucapan) {
+        JFrame previewFrame = new JFrame("Preview Nota");
         previewFrame.setSize(300, 500);
         previewFrame.setLocationRelativeTo(null);
 
@@ -273,44 +458,48 @@ public class MenuPengembalian extends javax.swing.JPanel {
                     g2d.drawString("Logo tidak ditemukan", 10, 20);
                 }
 
-                g2d.setFont(new Font("Monospaced", Font.PLAIN, 10));
+                Font font = new Font("Courier New", Font.PLAIN, 10);
+                g2d.setFont(font);
                 g2d.setColor(Color.BLACK);
                 FontMetrics fm = g2d.getFontMetrics();
 
                 int y = 130;
+                int lineSpacing = 13;
+                int panelWidth = getWidth();
+
+                // Header
                 String[] headerLines = {
                     "Jl. Gajah Mada Gg. Buntu No. 2",
-                    "(Barat Bank Danamon) Jember - Jawa Timur",
+                    "(Barat Bank Danamon)Jember-Jawa Timur",
                     "WA Only (No Call/SMS) 0821 3191 2829",
-                    "IG : brobet_jbr | Kode Pos. 68131",
-                    ""
+                    "IG : brobet_jbr | Kode Pos. 68131"
                 };
-                int panelWidth = getWidth();
 
                 for (String line : headerLines) {
                     int textWidth = fm.stringWidth(line);
                     int x = (panelWidth - textWidth) / 2;
                     g2d.drawString(line, x, y);
-                    y += fm.getHeight();
+                    y += lineSpacing;
                 }
 
-                // Gambar isi struk (kiri), kecuali baris ucapan
+                y += 5; // jarak sebelum isi struk
+
+                // Isi struk dan ucapan
                 for (String line : isiStruk.split("\n")) {
                     if (line.trim().equalsIgnoreCase(ucapan.trim())) {
-                        // Ucapan rata tengah
                         int textWidth = fm.stringWidth(line);
                         int x = (panelWidth - textWidth) / 2;
                         g2d.drawString(line, x, y);
                     } else {
                         g2d.drawString(line, 10, y);
                     }
-                    y += fm.getHeight();
+                    y += lineSpacing;
                 }
             }
 
             @Override
             public Dimension getPreferredSize() {
-                return new Dimension(280, 600);
+                return new Dimension(280, 550);
             }
         };
 
@@ -328,219 +517,7 @@ public class MenuPengembalian extends javax.swing.JPanel {
 
         previewFrame.setVisible(true);
     }
-
-    private void cetakStruk(String isiStruk, String ucapan) {
-        try {
-            BufferedImage logo = ImageIO.read(getClass().getResource("/assets/logo (2).png"));
-            String[] headerLines = {
-                "Jl. Gajah Mada Gg. Buntu No. 2",
-                "(Barat Bank Danamon)Jember-Jawa Timur",
-                "WA Only (No Call/SMS) 0821 3191 2829",
-                "IG : brobet_jbr | Kode Pos. 68131",
-                ""
-            };
-
-            PrinterJob job = PrinterJob.getPrinterJob();
-            PageFormat pf = job.defaultPage();
-            Paper paper = pf.getPaper();
-
-            // Set ukuran kertas thermal 80mm = 72mm x 297mm (tinggi bebas)
-            double width = 72 * 2.83;  // 1mm = 2.83 poin → 203dpi
-            double height = 297 * 2.83; // tinggi kertas default A4
-            double margin = 5; // kecilin margin
-
-            paper.setSize(width, height);
-            paper.setImageableArea(margin, margin, width - 2 * margin, height - 2 * margin);
-            pf.setPaper(paper);
-            pf.setOrientation(PageFormat.PORTRAIT);
-
-            Printable printable = new Printable() {
-                @Override
-                public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
-                    if (pageIndex > 0) {
-                        return NO_SUCH_PAGE;
-                    }
-
-                    Graphics2D g2d = (Graphics2D) graphics;
-                    g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
-                    g2d.setFont(new Font("Monospaced", Font.PLAIN, 10));
-                    FontMetrics fm = g2d.getFontMetrics();
-
-                    int y = 0;
-                    int pageWidth = (int) pageFormat.getImageableWidth();
-
-                    // Logo (centered)
-                    int logoWidth = 80, logoHeight = 80;
-                    int logoX = (pageWidth - logoWidth) / 2;
-                    g2d.drawImage(logo, logoX, y, logoWidth, logoHeight, null);
-                    y += logoHeight + 5;
-
-                    // Header (centered)
-                    for (String line : headerLines) {
-                        int lineWidth = fm.stringWidth(line);
-                        int x = (pageWidth - lineWidth) / 2;
-                        g2d.drawString(line, x, y);
-                        y += fm.getHeight();
-                    }
-
-                    // Isi struk (wrap jika terlalu panjang)
-                    for (String line : isiStruk.split("\n")) {
-                        y = drawWrappedLine(g2d, line, 0, y, pageWidth, fm);
-                    }
-
-                    // Ucapan (centered)
-                    y += fm.getHeight();
-                    int ucapanWidth = fm.stringWidth(ucapan);
-                    int xUcapan = (pageWidth - ucapanWidth) / 2;
-                    g2d.drawString(ucapan, xUcapan, y);
-
-                    return PAGE_EXISTS;
-                }
-
-                // Fungsi bantu untuk potong baris panjang
-                private int drawWrappedLine(Graphics2D g2d, String text, int x, int y, int maxWidth, FontMetrics fm) {
-                    String[] words = text.split(" ");
-                    StringBuilder lineBuilder = new StringBuilder();
-
-                    for (String word : words) {
-                        if (fm.stringWidth(lineBuilder + word + " ") > maxWidth) {
-                            g2d.drawString(lineBuilder.toString(), x, y);
-                            y += fm.getHeight();
-                            lineBuilder = new StringBuilder();
-                        }
-                        lineBuilder.append(word).append(" ");
-                    }
-                    if (!lineBuilder.toString().isEmpty()) {
-                        g2d.drawString(lineBuilder.toString(), x, y);
-                        y += fm.getHeight();
-                    }
-
-                    return y;
-                }
-            };
-
-            job.setPrintable(printable, pf);
-
-            if (job.printDialog()) {
-                job.print();
-                JOptionPane.showMessageDialog(null, "Nota berhasil dicetak!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Gagal mencetak: " + e.getMessage());
-        }
-    }
-
-    public void tampilkanPreviewStrukPengembalian(String idKembali) {
-        try {
-            // Ambil data pengembalian dan pelanggan
-            String sqlPengembalian = "SELECT p.id_kembali, p.id_sewa, p.tgl_kembali, p.status, p.denda_keterlambatan, p.total_denda, "
-                    + "pg.nama_lengkap, pg.no_hp, s.tgl_sewa, s.jaminan "
-                    + "FROM pengembalian p "
-                    + "JOIN penyewaan s ON p.id_sewa = s.id_sewa "
-                    + "JOIN pengguna pg ON s.id_pengguna = pg.id_pengguna "
-                    + "WHERE p.id_kembali = ?";
-            PreparedStatement psKembali = con.prepareStatement(sqlPengembalian);
-            psKembali.setString(1, idKembali);
-            ResultSet rsKembali = psKembali.executeQuery();
-
-            if (!rsKembali.next()) {
-                JOptionPane.showMessageDialog(this, "Data pengembalian tidak ditemukan.");
-                return;
-            }
-
-            String idSewa = rsKembali.getString("id_sewa");
-            String nama = rsKembali.getString("nama_lengkap");
-            String noHp = rsKembali.getString("no_hp");
-            String tglPinjam = rsKembali.getString("tgl_sewa");
-            String tglKembali = rsKembali.getString("tgl_kembali");
-            String status = rsKembali.getString("status");
-            String jaminan = rsKembali.getString("jaminan");
-
-            // Ambil detail barang
-            String sqlDetail = "SELECT b.nama_barang, dp.kondisi, SUM(dp.jumlah) AS jumlah, SUM(dp.denda_barang) AS denda "
-                    + "FROM detail_pengembalian dp "
-                    + "JOIN barang b ON dp.id_barang = b.id_barang "
-                    + "WHERE dp.id_kembali = ? "
-                    + "GROUP BY b.nama_barang, dp.kondisi";
-            PreparedStatement psDetail = con.prepareStatement(sqlDetail);
-            psDetail.setString(1, idKembali);
-            ResultSet rsDetail = psDetail.executeQuery();
-
-            int totalDenda = 0;
-            StringBuilder isiStruk = new StringBuilder();
-            isiStruk.append("BARANG KEMBALI:\n");
-            isiStruk.append(String.format("%-13s %3s %-4s %9s\n", "Nama", "Qty", "Kondisi", "Denda"));
-            isiStruk.append("===========================================\n");
-
-            while (rsDetail.next()) {
-                String namaBarang = rsDetail.getString("nama_barang");
-                int qty = rsDetail.getInt("jumlah");
-                String kondisi = rsDetail.getString("kondisi");
-                int denda = rsDetail.getInt("denda");
-                totalDenda += denda;
-
-                String namaPendek = namaBarang.length() > 13 ? namaBarang.substring(0, 13) : namaBarang;
-
-                isiStruk.append(String.format("%-13s %3d %-6s %10s\n",
-                        namaPendek,
-                        qty,
-                        kondisi.length() > 6 ? kondisi.substring(0, 6) : kondisi,
-                        String.format("Rp %,d", denda)
-                ));
-            }
-
-            // Ambil info pembayaran
-            String sqlBayar = "SELECT bayar, kembalian FROM pengembalian WHERE id_kembali = ?";
-            PreparedStatement psBayar = con.prepareStatement(sqlBayar);
-            psBayar.setString(1, idKembali);
-            ResultSet rsBayar = psBayar.executeQuery();
-
-            int bayar = 0, kembalian = 0;
-            if (rsBayar.next()) {
-                bayar = rsBayar.getInt("bayar");
-                kembalian = rsBayar.getInt("kembalian");
-            }
-
-            // Informasi pelanggan
-            StringBuilder infoPelanggan = new StringBuilder();
-            infoPelanggan.append("===========================================\n");
-            infoPelanggan.append("ID Pengembalian : ").append(idKembali).append("\n");
-            infoPelanggan.append("ID Penyewaan    : ").append(idSewa).append("\n");
-            infoPelanggan.append("Nama            : ").append(nama).append("\n");
-            infoPelanggan.append("No HP           : ").append(noHp).append("\n");
-            infoPelanggan.append("Tgl Pinjam      : ").append(tglPinjam).append("\n");
-            infoPelanggan.append("Tgl Kembali     : ").append(tglKembali).append("\n");
-            infoPelanggan.append("Status          : ").append(status).append("\n");
-            infoPelanggan.append("Jaminan         : ").append(jaminan).append("\n");
-            infoPelanggan.append("-------------------------------------------\n");
-
-            // Tambahkan total, bayar, kembalian, kasir
-            isiStruk.append("-------------------------------------------\n");
-            isiStruk.append(String.format("%-15s : Rp %,5d\n", "Total Denda", totalDenda));
-            isiStruk.append(String.format("%-15s : Rp %,5d\n", "Bayar", bayar));
-            isiStruk.append(String.format("%-15s : Rp %,5d\n", "Kembalian", kembalian));
-            isiStruk.append("Kasir           : ").append(Login.Session.getUsername()).append("\n");
-            isiStruk.append("===========================================\n\n");
-
-            // Ucapan
-            String ucapan = "TERIMA KASIH TELAH MENGEMBALIKAN!";
-
-            // Gabung semua
-            StringBuilder previewStruk = new StringBuilder();
-            previewStruk.append(infoPelanggan);
-            previewStruk.append(isiStruk);
-            previewStruk.append(ucapan).append("\n");
-
-            // Tampilkan preview struk
-            tampilkanPreviewStruk(previewStruk.toString(), ucapan);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Gagal menampilkan nota pengembalian: " + e.getMessage());
-        }
-    }
-
+    
     private void CekDanHitungKembalian() {
         try {
             String bayarText = txt_bayar.getText().replace("Rp ", "").replace(",", "").replaceAll("[^\\d]", "");
@@ -945,28 +922,12 @@ public class MenuPengembalian extends javax.swing.JPanel {
         total_denda.setBackground(new java.awt.Color(255, 244, 232));
         total_denda.setToolTipText("");
         total_denda.setBorder(null);
-        total_denda.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                total_dendaFocusGained(evt);
-            }
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                total_dendaFocusLost(evt);
-            }
-        });
         form_table_tambah.add(total_denda, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 450, 200, 30));
 
         denda_kerusakan.setEditable(false);
         denda_kerusakan.setBackground(new java.awt.Color(255, 244, 232));
         denda_kerusakan.setToolTipText("");
         denda_kerusakan.setBorder(null);
-        denda_kerusakan.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                denda_kerusakanFocusGained(evt);
-            }
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                denda_kerusakanFocusLost(evt);
-            }
-        });
         form_table_tambah.add(denda_kerusakan, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 389, 200, 30));
 
         txt_kembalian.setEditable(false);
@@ -1401,22 +1362,6 @@ public class MenuPengembalian extends javax.swing.JPanel {
 
     }//GEN-LAST:event_btn_simpanActionPerformed
 
-    private void denda_kerusakanFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_denda_kerusakanFocusLost
-
-    }//GEN-LAST:event_denda_kerusakanFocusLost
-
-    private void denda_kerusakanFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_denda_kerusakanFocusGained
-
-    }//GEN-LAST:event_denda_kerusakanFocusGained
-
-    private void total_dendaFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_total_dendaFocusLost
-
-    }//GEN-LAST:event_total_dendaFocusLost
-
-    private void total_dendaFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_total_dendaFocusGained
-
-    }//GEN-LAST:event_total_dendaFocusGained
-
     private void btn_back1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_back1ActionPerformed
         // TODO add your handling code here:
         page_main.removeAll();
@@ -1449,8 +1394,8 @@ public class MenuPengembalian extends javax.swing.JPanel {
         try {
             String idKembali = listIdKembali.get(selectedRow);
 
-            // Ambil data pengembalian dan pelanggan
-            String sqlPengembalian = "SELECT p.id_kembali, p.id_sewa, p.tgl_kembali, p.status, p.denda_keterlambatan, p.total_denda, "
+            // Ambil data utama pengembalian & pelanggan
+            String sqlPengembalian = "SELECT p.id_sewa, p.tgl_kembali, p.status, p.denda_keterlambatan, p.total_denda, p.bayar, p.kembalian, "
                     + "pg.nama_lengkap, pg.no_hp, s.tgl_sewa, s.jaminan "
                     + "FROM pengembalian p "
                     + "JOIN penyewaan s ON p.id_sewa = s.id_sewa "
@@ -1466,96 +1411,88 @@ public class MenuPengembalian extends javax.swing.JPanel {
             }
 
             String idSewa = rsKembali.getString("id_sewa");
-            String nama = rsKembali.getString("nama_lengkap");
-            String noHp = rsKembali.getString("no_hp");
             String tglPinjam = rsKembali.getString("tgl_sewa");
             String tglKembali = rsKembali.getString("tgl_kembali");
+            String nama = rsKembali.getString("nama_lengkap");
+            String noHp = rsKembali.getString("no_hp");
             String status = rsKembali.getString("status");
             String jaminan = rsKembali.getString("jaminan");
+            int dendaKeterlambatan = rsKembali.getInt("denda_keterlambatan");
+            int totalDenda = rsKembali.getInt("total_denda");
+            int bayar = rsKembali.getInt("bayar");
+            int kembalian = rsKembali.getInt("kembalian");
 
-            // Ambil detail barang
+            // Ambil detail barang pengembalian
             String sqlDetail = "SELECT b.nama_barang, dp.kondisi, SUM(dp.jumlah) AS jumlah, SUM(dp.denda_barang) AS denda "
                     + "FROM detail_pengembalian dp "
                     + "JOIN barang b ON dp.id_barang = b.id_barang "
                     + "WHERE dp.id_kembali = ? "
                     + "GROUP BY b.nama_barang, dp.kondisi";
-
             PreparedStatement psDetail = con.prepareStatement(sqlDetail);
             psDetail.setString(1, idKembali);
             ResultSet rsDetail = psDetail.executeQuery();
 
-            int totalDenda = 0;
-            StringBuilder isiStruk = new StringBuilder();
-            isiStruk.append("BARANG KEMBALI:\n");
-            isiStruk.append(String.format("%-13s %3s %-4s %9s\n", "Nama", "Jumlah", "Kondisi", "Denda"));
-            isiStruk.append("===========================================\n");
+            StringBuilder detailBarang = new StringBuilder();
+            detailBarang.append(String.format("%-15s %6s %8s %12s\n", "Nama", "Qty", "Kondisi", "Denda"));
+            detailBarang.append("-----------------------------------------------\n");
 
             while (rsDetail.next()) {
                 String namaBarang = rsDetail.getString("nama_barang");
                 int qty = rsDetail.getInt("jumlah");
                 String kondisi = rsDetail.getString("kondisi");
-                int denda = rsDetail.getInt("denda");
-                totalDenda += denda;
+                int dendaBarang = rsDetail.getInt("denda");
 
-                String namaPendek = namaBarang.length() > 13 ? namaBarang.substring(0, 13) : namaBarang;
+                String namaPendek = namaBarang.length() > 15 ? namaBarang.substring(0, 15) : namaBarang;
+                String kondisiPendek = kondisi.length() > 8 ? kondisi.substring(0, 8) : kondisi;
 
-                isiStruk.append(String.format("%-13s %3d %-6s %10s\n",
+                detailBarang.append(String.format("%-15s %6d %8s %12s\n",
                         namaPendek,
                         qty,
-                        kondisi.length() > 6 ? kondisi.substring(0, 6) : kondisi,
-                        String.format("Rp %,d", denda)
+                        kondisiPendek,
+                        String.format("Rp%,d", dendaBarang)
                 ));
             }
 
-            // Ambil info pembayaran
-            String sqlBayar = "SELECT bayar, kembalian FROM pengembalian WHERE id_kembali = ?";
-            PreparedStatement psBayar = con.prepareStatement(sqlBayar);
-            psBayar.setString(1, idKembali);
-            ResultSet rsBayar = psBayar.executeQuery();
-
-            int bayar = 0, kembalian = 0;
-
-            if (rsBayar.next()) {
-                bayar = rsBayar.getInt("bayar");
-                kembalian = rsBayar.getInt("kembalian");
-            }
-
-            // Informasi pelanggan
+            // Rangkai header info pelanggan
             StringBuilder infoPelanggan = new StringBuilder();
             infoPelanggan.append("===========================================\n");
-            infoPelanggan.append("ID Pengembalian : ").append(idKembali).append("\n");
-            infoPelanggan.append("ID Penyewaan    : ").append(idSewa).append("\n");
-            infoPelanggan.append("Nama            : ").append(nama).append("\n");
-            infoPelanggan.append("No HP           : ").append(noHp).append("\n");
-            infoPelanggan.append("Tgl Pinjam      : ").append(tglPinjam).append("\n");
-            infoPelanggan.append("Tgl Kembali     : ").append(tglKembali).append("\n");
-            infoPelanggan.append("Status          : ").append(status).append("\n");
-            infoPelanggan.append("Jaminan         : ").append(jaminan).append("\n");
-            infoPelanggan.append("--------------------------------------------\n");
+            infoPelanggan.append(String.format("%-15s : %s\n", "ID Pengembalian", idKembali));
+            infoPelanggan.append(String.format("%-15s : %s\n", "ID Penyewaan", idSewa));
+            infoPelanggan.append(String.format("%-15s : %s\n", "Nama", nama));
+            infoPelanggan.append(String.format("%-15s : %s\n", "No HP", noHp));
+            infoPelanggan.append(String.format("%-15s : %s\n", "Tgl Pinjam", tglPinjam));
+            infoPelanggan.append(String.format("%-15s : %s\n", "Tgl Kembali", tglKembali));
+            infoPelanggan.append(String.format("%-15s : %s\n", "Status", status));
+            infoPelanggan.append(String.format("%-15s : %s\n", "Jaminan", jaminan));
+            infoPelanggan.append("-------------------------------------------\n");
 
-            // Tambahkan total, bayar, kembalian, kasir
+            // Rangkai isi struk detail + pembayaran
+            StringBuilder isiStruk = new StringBuilder();
+            isiStruk.append("BARANG KEMBALI:\n");
+            isiStruk.append(detailBarang);
             isiStruk.append("-------------------------------------------\n");
-            isiStruk.append(String.format("%-15s : Rp %,5d\n", "Total Denda", totalDenda));
-            isiStruk.append(String.format("%-15s : Rp %,5d\n", "Bayar", bayar));
-            isiStruk.append(String.format("%-15s : Rp %,5d\n", "Kembalian", kembalian));
-            isiStruk.append("Kasir           : ").append(Login.Session.getUsername()).append("\n");
-            isiStruk.append("===========================================\n");
-            isiStruk.append("\n");
+            isiStruk.append(String.format("%-15s : Rp%,d\n", "Denda Keterlambatan", dendaKeterlambatan));
+            isiStruk.append(String.format("%-15s : Rp%,d\n", "Total Denda", totalDenda));
+            isiStruk.append(String.format("%-15s : Rp%,d\n", "Bayar", bayar));
+            isiStruk.append(String.format("%-15s : Rp%,d\n", "Kembalian", kembalian));
+            isiStruk.append(String.format("%-15s : %s\n", "Kasir", Login.Session.getUsername()));
+            isiStruk.append("===========================================\n\n");
 
             // Ucapan
             String ucapan = "TERIMA KASIH TELAH MENGEMBALIKAN!";
 
-            // Gabung semua
-            StringBuilder previewStruk = new StringBuilder();
-            previewStruk.append(infoPelanggan);
-            previewStruk.append(isiStruk);
+            // Gabungkan semua
+            StringBuilder fullStruk = new StringBuilder();
+            fullStruk.append(infoPelanggan);
+            fullStruk.append(isiStruk);
+            fullStruk.append(ucapan).append("\n");
 
-            // Tampilkan preview
-            tampilkanPreviewStruk(previewStruk.toString(), ucapan);
+            // Tampilkan preview / cetak
+            tampilkanPreviewStruk(fullStruk.toString(), ucapan);
 
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Gagal mencetak nota pengembalian: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "Gagal menampilkan nota pengembalian: " + e.getMessage());
         }
 
     }//GEN-LAST:event_btn_notaActionPerformed

@@ -18,6 +18,8 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.print.Paper;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -28,6 +30,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class MenuPenyewaan extends javax.swing.JPanel {
 
@@ -44,6 +49,7 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         Koneksi DB = new Koneksi();
         DB.config();
         con = DB.con;
+        
 
         load_table();
         search1();
@@ -51,7 +57,9 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         label_username2.setText(Login.Session.getUsername());
         label_username3.setText(Login.Session.getUsername());
         label_username4.setText(Login.Session.getUsername());
-     
+
+    
+        setupBarcodeScannerListener();
 
     }
     
@@ -183,6 +191,100 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         table_barang.setModel(model);
     }
 
+    private void processBarcode() {
+        String scannedKode = txt_barcode.getText().trim();
+        if (scannedKode.isEmpty()) return;
+
+        try {
+            String sql = "SELECT * FROM barang WHERE barcode = ?";
+            pst = con.prepareStatement(sql);
+            pst.setString(1, scannedKode);
+            rs = pst.executeQuery();
+
+            if (rs.next()) {
+                String idBarang = rs.getString("id_barang");
+                String namaBarang = rs.getString("nama_barang");
+                int harga = rs.getInt("harga_sewa");
+                int stok = rs.getInt("stok");
+
+                String qtyStr = JOptionPane.showInputDialog(null, "Masukkan jumlah untuk " + namaBarang + ":", "Jumlah Barang", JOptionPane.QUESTION_MESSAGE);
+                if (qtyStr == null || qtyStr.trim().isEmpty()) return;
+
+                int qty = Integer.parseInt(qtyStr.trim());
+
+                if (qty <= 0) {
+                    JOptionPane.showMessageDialog(null, "Jumlah harus lebih dari 0!");
+                    return;
+                }
+
+                if (qty > stok) {
+                    JOptionPane.showMessageDialog(null, "Stok tidak mencukupi! Tersedia: " + stok);
+                    return;
+                }
+
+                DefaultTableModel model = (DefaultTableModel) table_barang.getModel();
+                boolean barangSudahAda = false;
+
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    String idTabel = model.getValueAt(i, 0).toString();
+                    if (idTabel.equals(idBarang)) {
+                        int qtyLama = Integer.parseInt(model.getValueAt(i, 2).toString());
+                        int qtyBaru = qtyLama + qty;
+                        double subTotalBaru = harga * qtyBaru;
+
+                        model.setValueAt(qtyBaru, i, 2);
+                        model.setValueAt(subTotalBaru, i, 4);
+                        barangSudahAda = true;
+                        break;
+                    }
+                }
+
+                if (!barangSudahAda) {
+                    double subTotal = qty * harga;
+                    model.addRow(new Object[]{idBarang, namaBarang, qty, harga, subTotal});
+                }
+
+                hitungTotalHarga();
+                txt_barcode.setText("");
+
+            } else {
+                JOptionPane.showMessageDialog(null, "Barang tidak ditemukan!");
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Jumlah harus berupa angka!");
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Database Error: " + e.getMessage());
+        }
+    }
+
+    private void setupBarcodeScannerListener() {
+        txt_barcode.getDocument().addDocumentListener(new DocumentListener() {
+            private Timer timer = new Timer(300, new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    processBarcode();
+                }
+            });
+
+            public void changedUpdate(DocumentEvent e) {
+                restartTimer();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                restartTimer();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                restartTimer();
+            }
+
+            private void restartTimer() {
+                timer.setRepeats(false);
+                timer.restart();
+            }
+        });
+    }
+    
     private void CekDanHitungKembalian() {
         try {
             String bayarText = txt_bayar.getText().replace("Rp ", "").replace(",", "").replaceAll("[^\\d]", "");
@@ -416,7 +518,7 @@ public class MenuPenyewaan extends javax.swing.JPanel {
 
             @Override
             public Dimension getPreferredSize() {
-                return new Dimension(280, 600);
+                return new Dimension(280, 550);
             }
         };
 
@@ -1146,16 +1248,6 @@ public class MenuPenyewaan extends javax.swing.JPanel {
 
     }//GEN-LAST:event_btn_detailActionPerformed
 
-    private void btn_calenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_calenderActionPerformed
-        // TODO add your handling code here:
-        dateChooser.showPopup();
-    }//GEN-LAST:event_btn_calenderActionPerformed
-
-    private void btn_calender2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_calender2ActionPerformed
-        // TODO add your handling code here:
-        dateChooser2.showPopup();
-    }//GEN-LAST:event_btn_calender2ActionPerformed
-
     private void btn_calenderPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_btn_calenderPropertyChange
 
     }//GEN-LAST:event_btn_calenderPropertyChange
@@ -1563,6 +1655,8 @@ public class MenuPenyewaan extends javax.swing.JPanel {
             JOptionPane.showMessageDialog(this, "Harap lengkapi semua data penyewa!");
             return;
         }
+        
+        
 
         page_main.removeAll();
         page_main.add(page_barang);
@@ -1761,6 +1855,18 @@ public class MenuPenyewaan extends javax.swing.JPanel {
         page_main.repaint();
         page_main.revalidate();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void btn_calenderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_calenderActionPerformed
+        // TODO add your handling code here:
+          dateChooser.showPopup();
+
+    }//GEN-LAST:event_btn_calenderActionPerformed
+
+    private void btn_calender2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_calender2ActionPerformed
+        // TODO add your handling code here:
+          dateChooser2.showPopup();
+
+    }//GEN-LAST:event_btn_calender2ActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
