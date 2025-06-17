@@ -811,7 +811,7 @@ public class MenuBarang extends javax.swing.JPanel {
         page_main.setBackground(new java.awt.Color(255, 244, 232));
         page_main.setLayout(new java.awt.CardLayout());
 
-        page_barang.setBackground(new java.awt.Color(255, 244, 232));
+        page_barang.setBackground(new java.awt.Color(255, 255, 255));
         page_barang.setForeground(new java.awt.Color(230, 230, 230));
         page_barang.setPreferredSize(new java.awt.Dimension(836, 666));
         page_barang.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
