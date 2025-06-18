@@ -505,79 +505,79 @@ public String generateIdStokMasuk(Connection conn) throws SQLException {
         label_username.setText(Login.Session.getUsername());
 
         
-        String selectedNamaBarang = (String) cmb_pilihbarang.getSelectedItem();
-if (selectedNamaBarang == null || selectedNamaBarang.isEmpty()) {
+    String selectedNamaBarang = (String) cmb_pilihbarang.getSelectedItem();
+    if (selectedNamaBarang == null || selectedNamaBarang.isEmpty()) {
     JOptionPane.showMessageDialog(this, "Pilih barang terlebih dahulu!", "Peringatan", JOptionPane.WARNING_MESSAGE);
-    return;
-}
+        return;
+    }
 
-String idBarang = barangMap.get(selectedNamaBarang);
-if (idBarang == null) {
-    JOptionPane.showMessageDialog(this, "Barang tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
-    return;
-}
+    String idBarang = barangMap.get(selectedNamaBarang);
+    if (idBarang == null) {
+        JOptionPane.showMessageDialog(this, "Barang tidak ditemukan!", "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
 
-String jumlahStr = txt_jumlahbarang.getText().trim();
-String hargaStr = txt_harga.getText().replaceAll("[^\\d]", ""); // Hapus "Rp" dan titik
-String kategori = txt_kategori.getText().trim();
-String namaPemasok = (String) cmb_idpemasok.getSelectedItem();
-String idPemasok = pemasokMap.get(namaPemasok); // Ambil id dari map
+    String jumlahStr = txt_jumlahbarang.getText().trim();
+    String hargaStr = txt_harga.getText().replaceAll("[^\\d]", ""); // Hapus "Rp" dan titik
+    String kategori = txt_kategori.getText().trim();
+    String namaPemasok = (String) cmb_idpemasok.getSelectedItem();
+    String idPemasok = pemasokMap.get(namaPemasok); // Ambil id dari map
 
-if (jumlahStr.isEmpty() || hargaStr.isEmpty() || kategori.isEmpty() || idPemasok == null || idPemasok.isEmpty()) {
-    JOptionPane.showMessageDialog(this, "Semua field harus diisi!", "Peringatan", JOptionPane.WARNING_MESSAGE);
-    return;
-}
+    if (jumlahStr.isEmpty() || hargaStr.isEmpty() || kategori.isEmpty() || idPemasok == null || idPemasok.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "Semua field harus diisi!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
 
-try {
-    int qty = Integer.parseInt(jumlahStr);
-    int harga = Integer.parseInt(hargaStr);
-    
-
-
-    Koneksi.config();
-    Connection conn = Koneksi.getConnection();
-    String idStokMasuk = generateIdStokMasuk(conn);
+    try {
+        int qty = Integer.parseInt(jumlahStr);
+        int harga = Integer.parseInt(hargaStr);
 
 
-    // 1. INSERT ke stok_masuk
-    String sqlInsert = "INSERT INTO stok_masuk (id_stok_masuk, id_barang, kategori, qty, harga, id_pemasok) VALUES (?, ?, ?, ?, ?, ?)";
-    PreparedStatement pstInsert = conn.prepareStatement(sqlInsert);
-    pstInsert.setString(1, idStokMasuk);
-    pstInsert.setString(2, idBarang);
-    pstInsert.setString(3, kategori);
-    pstInsert.setInt(4, qty);
-    pstInsert.setInt(5, harga);
-    pstInsert.setString(6, idPemasok);
-    pstInsert.executeUpdate();
 
-    // 2. UPDATE stok barang
-    String sqlUpdate = "UPDATE barang SET stok = stok + ? WHERE id_barang = ?";
-    PreparedStatement pstUpdate = conn.prepareStatement(sqlUpdate);
-    pstUpdate.setInt(1, qty);
-    pstUpdate.setString(2, idBarang);
-    pstUpdate.executeUpdate();
+        Koneksi.config();
+        Connection conn = Koneksi.getConnection();
+        String idStokMasuk = generateIdStokMasuk(conn);
 
-    JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
 
-    // Reset form
-    cmb_pilihbarang.setSelectedIndex(-1);
-    txt_jumlahbarang.setText("");
-    txt_harga.setText("");
-    txt_kategori.setText("");
-    cmb_idpemasok.setSelectedIndex(-1);
+        // 1. INSERT ke stok_masuk
+        String sqlInsert = "INSERT INTO stok_masuk (id_stok_masuk, id_barang, kategori, qty, harga, id_pemasok) VALUES (?, ?, ?, ?, ?, ?)";
+        PreparedStatement pstInsert = conn.prepareStatement(sqlInsert);
+        pstInsert.setString(1, idStokMasuk);
+        pstInsert.setString(2, idBarang);
+        pstInsert.setString(3, kategori);
+        pstInsert.setInt(4, qty);
+        pstInsert.setInt(5, harga);
+        pstInsert.setString(6, idPemasok);
+        pstInsert.executeUpdate();
 
-    // Kembali ke halaman stok masuk
-    loadDataStokMasuk();
-    page_mainn.removeAll();
-    page_mainn.add(page_stokmasuk);
-    page_mainn.repaint();
-    page_mainn.revalidate();
+        // 2. UPDATE stok barang
+        String sqlUpdate = "UPDATE barang SET stok = stok + ? WHERE id_barang = ?";
+        PreparedStatement pstUpdate = conn.prepareStatement(sqlUpdate);
+        pstUpdate.setInt(1, qty);
+        pstUpdate.setString(2, idBarang);
+        pstUpdate.executeUpdate();
 
-} catch (NumberFormatException e) {
-    JOptionPane.showMessageDialog(this, "Jumlah dan harga harus berupa angka!", "Error", JOptionPane.ERROR_MESSAGE);
-} catch (SQLException e) {
-    JOptionPane.showMessageDialog(this, "Terjadi kesalahan database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-}
+        JOptionPane.showMessageDialog(this, "Data berhasil disimpan!");
+
+        // Reset form
+        cmb_pilihbarang.setSelectedIndex(-1);
+        txt_jumlahbarang.setText("");
+        txt_harga.setText("");
+        txt_kategori.setText("");
+        cmb_idpemasok.setSelectedIndex(-1);
+
+        // Kembali ke halaman stok masuk
+        loadDataStokMasuk();
+        page_mainn.removeAll();
+        page_mainn.add(page_stokmasuk);
+        page_mainn.repaint();
+        page_mainn.revalidate();
+
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(this, "Jumlah dan harga harus berupa angka!", "Error", JOptionPane.ERROR_MESSAGE);
+    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "Terjadi kesalahan database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
 
 
     }//GEN-LAST:event_btn_simpanActionPerformed
